@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Drawing Lite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background: radial-gradient(circle at top, rgba(59, 130, 246, 0.2), transparent),
+          radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.25), transparent),
+          linear-gradient(135deg, #020617 0%, #0f172a 55%, #082f49 100%);
+        color: #f8fafc;
+        font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      .glass {
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.35));
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        box-shadow: 0 30px 90px rgba(15, 23, 42, 0.45);
+      }
+      a.cta {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      a.cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 18px 45px rgba(59, 130, 246, 0.35);
+      }
+    </style>
+  </head>
+  <body class="flex items-center justify-center p-6">
+    <main class="glass max-w-4xl w-full rounded-3xl p-10 md:p-16">
+      <div class="grid gap-10 md:grid-cols-[1.1fr_0.9fr]">
+        <section class="space-y-6">
+          <span class="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
+            Live Drawing Lite
+          </span>
+          <h1 class="text-4xl md:text-5xl font-semibold text-white leading-tight">
+            Realtime classroom sketching powered by Convex.
+          </h1>
+          <p class="text-lg text-slate-200 leading-relaxed">
+            Start a classroom session as a teacher, share the session code with your students, and collaborate on the canvas in real time. This version replaces Supabase with Convex for low-latency syncing.
+          </p>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <a
+              href="./teacher.html"
+              class="cta inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-500 px-6 py-4 text-lg font-semibold text-white shadow-lg shadow-indigo-500/30"
+            >
+              Teacher Console
+              <span aria-hidden="true">→</span>
+            </a>
+            <a
+              href="./student.html"
+              class="cta inline-flex items-center justify-center gap-2 rounded-2xl border border-indigo-200/50 bg-white/10 px-6 py-4 text-lg font-semibold text-indigo-100"
+            >
+              Student Canvas
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </section>
+        <aside class="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h2 class="text-xl font-semibold text-white">What's new?</h2>
+          <ul class="space-y-4 text-sm text-slate-100">
+            <li>
+              • Convex mutations replace Supabase broadcasts for drawing, clearing, and session lifecycle events.
+            </li>
+            <li>• Participants list is backed by Convex data to track connected students.</li>
+            <li>
+              • Setup guide updated with Convex project instructions inside <code>README.md</code>.
+            </li>
+          </ul>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>

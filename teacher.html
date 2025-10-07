@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Teacher Console · Live Drawing Lite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        min-height: 100vh;
+        background: radial-gradient(circle at top, rgba(59, 130, 246, 0.25), transparent 55%),
+          radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.25), transparent 45%),
+          linear-gradient(130deg, #020617 0%, #0f172a 55%, #082f49 100%);
+        color: #f1f5f9;
+        font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      .glass {
+        backdrop-filter: blur(30px) saturate(180%);
+        -webkit-backdrop-filter: blur(30px) saturate(180%);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(30, 41, 59, 0.4));
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        box-shadow: 0 35px 90px rgba(2, 6, 23, 0.45);
+      }
+      button,
+      a {
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      }
+      button:hover,
+      a:hover {
+        transform: translateY(-1px);
+      }
+      button:active,
+      a:active {
+        transform: translateY(0);
+      }
+      .toolbar-btn.active {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(59, 130, 246, 0.85));
+        color: white;
+        border-color: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 18px 45px rgba(59, 130, 246, 0.35);
+      }
+    </style>
+  </head>
+  <body class="flex min-h-screen flex-col p-5 md:p-10">
+    <header class="glass mb-8 flex flex-col gap-4 rounded-3xl px-8 py-6 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="text-sm uppercase tracking-[0.35em] text-slate-300">Live Drawing Lite</p>
+        <h1 class="mt-2 text-3xl font-semibold text-white">Teacher Console</h1>
+      </div>
+      <nav class="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-300">
+        <a href="./index.html" class="rounded-full border border-white/10 px-4 py-2 hover:border-indigo-300 hover:text-white">Home</a>
+        <a href="./student.html" class="rounded-full border border-white/10 px-4 py-2 hover:border-indigo-300 hover:text-white">Student View</a>
+        <a href="https://docs.convex.dev/home" target="_blank" rel="noreferrer" class="rounded-full border border-white/10 px-4 py-2 hover:border-indigo-300 hover:text-white">Convex Docs</a>
+      </nav>
+    </header>
+
+    <main class="glass grid flex-1 gap-10 rounded-[42px] border border-white/10 p-8 md:grid-cols-[380px_minmax(0,1fr)]">
+      <aside class="space-y-8">
+        <section class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h2 class="text-xl font-semibold text-white">Connection</h2>
+          <p class="text-sm leading-relaxed text-slate-300">
+            Paste your deployed Convex URL. We store it locally so you only set it once per device.
+          </p>
+          <form id="connectionForm" class="space-y-3">
+            <label class="block text-sm font-medium text-slate-200" for="convexUrlInput">Convex deployment URL</label>
+            <input
+              id="convexUrlInput"
+              class="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              placeholder="https://your-project.convex.cloud"
+              autocomplete="off"
+            />
+            <button
+              type="submit"
+              class="w-full rounded-2xl border border-indigo-300/40 bg-indigo-500/80 px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-500"
+            >
+              Save connection
+            </button>
+          </form>
+        </section>
+
+        <section class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h2 class="text-xl font-semibold text-white">Session</h2>
+          <form id="sessionForm" class="space-y-4">
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-slate-200" for="teacherNameInput">Your name</label>
+              <input
+                id="teacherNameInput"
+                class="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                placeholder="Mrs. Garcia"
+                maxlength="40"
+                required
+              />
+            </div>
+            <button
+              id="startSessionBtn"
+              type="submit"
+              class="w-full rounded-2xl border border-emerald-300/40 bg-emerald-500/80 px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-500"
+            >
+              Start new session
+            </button>
+            <button
+              id="endSessionBtn"
+              type="button"
+              class="w-full rounded-2xl border border-rose-300/40 bg-rose-500/30 px-5 py-3 text-center text-sm font-semibold text-rose-100 hover:bg-rose-500/40 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled
+            >
+              End session
+            </button>
+          </form>
+          <div class="rounded-2xl border border-indigo-300/30 bg-indigo-500/10 p-4 text-sm text-indigo-100" id="sessionInfo">
+            Session code: <span class="font-semibold text-white" id="sessionCode">—</span>
+          </div>
+        </section>
+
+        <section class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-white">Participants</h2>
+            <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs uppercase tracking-wider text-slate-200" id="participantCount">
+              0 online
+            </span>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-200" id="participantList">
+            <li class="text-slate-400">Nobody has joined yet.</li>
+          </ul>
+        </section>
+
+        <section class="space-y-2 rounded-3xl border border-white/10 bg-white/5 p-5">
+          <h2 class="text-base font-semibold text-slate-200">Status</h2>
+          <p id="statusBanner" class="text-sm leading-relaxed text-slate-300">
+            Configure Convex and start a session to begin drawing.
+          </p>
+        </section>
+      </aside>
+
+      <section class="flex flex-col gap-6">
+        <div class="glass flex flex-wrap items-center gap-3 rounded-3xl border border-white/10 px-5 py-4">
+          <div class="flex items-center gap-2 text-sm font-medium text-slate-200">
+            Tool:
+            <button data-tool="pen" class="toolbar-btn rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white">Pen</button>
+            <button data-tool="eraser" class="toolbar-btn rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white">
+              Eraser
+            </button>
+          </div>
+          <div class="flex items-center gap-2 text-sm font-medium text-slate-200">
+            Color:
+            <button data-color="#0f172a" class="color-btn h-9 w-9 rounded-full border border-white/20 bg-[#0f172a]"></button>
+            <button data-color="#2563eb" class="color-btn h-9 w-9 rounded-full border border-white/20 bg-[#2563eb]"></button>
+            <button data-color="#f97316" class="color-btn h-9 w-9 rounded-full border border-white/20 bg-[#f97316]"></button>
+            <button data-color="#16a34a" class="color-btn h-9 w-9 rounded-full border border-white/20 bg-[#16a34a]"></button>
+          </div>
+          <label class="ml-auto flex items-center gap-2 text-sm font-medium text-slate-200">
+            Size
+            <input
+              id="brushSizeInput"
+              type="range"
+              min="2"
+              max="20"
+              value="6"
+              class="h-1 w-36 cursor-pointer appearance-none rounded-full bg-white/20"
+            />
+          </label>
+          <div class="flex items-center gap-2">
+            <button
+              id="undoBtn"
+              type="button"
+              class="rounded-2xl border border-blue-200/40 bg-blue-500/20 px-4 py-2 text-sm font-semibold text-blue-100 hover:bg-blue-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled
+            >
+              Undo
+            </button>
+            <button
+              id="redoBtn"
+              type="button"
+              class="rounded-2xl border border-sky-200/40 bg-sky-500/20 px-4 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled
+            >
+              Redo
+            </button>
+            <button
+              id="clearCanvasBtn"
+              type="button"
+              class="rounded-2xl border border-amber-200/40 bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled
+            >
+              Clear canvas
+            </button>
+          </div>
+        </div>
+
+        <div class="relative flex-1 overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-2xl" style="min-height: 520px;">
+          <canvas id="board" class="h-full w-full"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <script src="./js/config-bootstrap.js"></script>
+    <script type="module" src="./js/teacher.js"></script>
+  </body>
+</html>
