@@ -47,6 +47,7 @@ npx convex init               # sign in & create or link a Convex deployment
 The repo already includes the server logic you need:
 
 - `convex/schema.ts` – tables for sessions, strokes, and participants
+- `convex/events.ts` – lightweight event bus powering the Supabase-compatible broadcast shim
 - `convex/sessions.ts` – create/end sessions & heartbeats
 - `convex/drawings.ts` – append strokes, list strokes, clear canvas
 - `convex/participants.ts` – presence tracking
@@ -108,6 +109,7 @@ If you want to hide the Convex URL behind server-side configuration and ship eve
    - Use `cd DEPLOY/server && npm start` as the start command.
    - Add an environment variable `CONVEX_URL=https://your-project.convex.cloud` (and optionally `NODE_ENV=production`).
    - Render will serve the static UI and proxy API calls from the same origin, keeping the Convex URL off the client bundle.
+5. The original Supabase browser code is still present in `teacher.html` / `student.html`, but they now import `js/convex-supabase-adapter.js`, a lightweight shim that re-implements `createClient().channel()` on top of Convex mutations/queries so you keep the exact UI/UX while swapping the realtime backend.
 
 ## 9. Handling larger classrooms
 
@@ -121,6 +123,7 @@ If you want to hide the Convex URL behind server-side configuration and ship eve
 - Gate student drawing by adding role-based permissions in `drawings:append`.
 - Persist exported canvas snapshots or attachments using Convex storage.
 - Add authentication (Convex Auth or third-party) for tighter access control.
+- Extend `convex/events.ts` with scheduled pruning or analytics if you expect extremely long sessions; the adapter already keeps the most recent ~400 events per channel.
 
 ## Troubleshooting tips
 

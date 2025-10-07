@@ -12,8 +12,13 @@
         return;
       }
       const data = await response.json();
-      if (data && data.convexUrl && !window.CONVEX_URL) {
+      if (data && data.convexUrl && data.convexUrl !== window.CONVEX_URL) {
         window.CONVEX_URL = data.convexUrl;
+        try {
+          localStorage.setItem('live-drawing-lite:convex-url', data.convexUrl);
+        } catch (storageError) {
+          console.warn('Unable to persist Convex URL to localStorage.', storageError);
+        }
         window.dispatchEvent(
           new CustomEvent("convex:config", {
             detail: { convexUrl: data.convexUrl },

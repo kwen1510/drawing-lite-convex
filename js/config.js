@@ -21,7 +21,7 @@ export function setConvexUrl(url) {
 export function requireConvexUrl() {
   const url = getConvexUrl();
   if (!url) {
-    throw new Error("Convex deployment URL is required. Set it in the Connection section first.");
+    throw new Error("Convex deployment URL is required. Configure it in the connection settings or via environment variables.");
   }
   return url;
 }

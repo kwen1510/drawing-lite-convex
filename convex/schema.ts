@@ -40,4 +40,11 @@ export default defineSchema({
   })
     .index("by_session", ["sessionId"])
     .index("by_session_role", ["sessionId", "role"]),
+  events: defineTable({
+    channel: v.string(),
+    event: v.string(),
+    payload: v.any(),
+    sequence: v.number(),
+    createdAt: v.number(),
+  }).index("by_channel_sequence", ["channel", "sequence"]),
 });
