@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: live-drawing-lite
+    env: node
+    plan: free           # or starter/standard/etc.
+    buildCommand: cd DEPLOY/server && npm install
+    startCommand: cd DEPLOY/server && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: CONVEX_URL  # set in the Render dashboard before the first deploy
+        sync: false
+      - key: NODE_ENV
+        value: production
