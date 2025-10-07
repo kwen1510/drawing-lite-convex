@@ -1,269 +1,78 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Live Drawing Tool</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Drawing Lite</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              display: ['"Plus Jakarta Sans"', "ui-sans-serif", "system-ui"],
-            },
-            colors: {
-              brand: {
-                50: "#eef2ff",
-                100: "#e0e7ff",
-                500: "#6366f1",
-                600: "#4f46e5",
-                700: "#4338ca",
-                800: "#3730a3",
-              },
-            },
-            boxShadow: {
-              glow: "0 25px 70px rgba(99, 102, 241, 0.35)",
-            },
-          },
-        },
-      };
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
     <style>
-      :root{
-        --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.75), rgba(255,255,255,0.4));
-        --glass-border: rgba(148,163,184,0.35);
-        --glass-shadow: 0 24px 70px rgba(15,23,42,0.18);
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background: radial-gradient(circle at top, rgba(59, 130, 246, 0.2), transparent),
+          radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.25), transparent),
+          linear-gradient(135deg, #020617 0%, #0f172a 55%, #082f49 100%);
+        color: #f8fafc;
+        font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       }
-      body{
-        background: linear-gradient(135deg, #e0f2fe 0%, #f8fafc 55%, #eef2ff 100%);
-        color:#0f172a;
+      .glass {
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.35));
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        box-shadow: 0 30px 90px rgba(15, 23, 42, 0.45);
       }
-      .glass-surface{
-        position:relative;
-        background:var(--glass-bg) !important;
-        border-color:var(--glass-border) !important;
-        box-shadow:var(--glass-shadow);
-        backdrop-filter:blur(24px) saturate(180%);
-        -webkit-backdrop-filter:blur(24px) saturate(180%);
-        color:#0f172a;
+      a.cta {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
-      .glass-surface::before{
-        content:"";
-        position:absolute;
-        inset:0;
-        border-radius:inherit;
-        background:linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0));
-        pointer-events:none;
-      }
-      .glass-surface > *{ position:relative; z-index:1; }
-      .glass-pill{
-        background:rgba(99,102,241,0.12);
-        border:1px solid rgba(99,102,241,0.35);
-        color:#3730a3;
-        box-shadow:0 16px 35px rgba(99,102,241,0.2);
-        backdrop-filter:blur(16px) saturate(160%);
-        -webkit-backdrop-filter:blur(16px) saturate(160%);
-      }
-      .glass-button{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:1rem;
-        border-radius:1.25rem;
-        background:linear-gradient(135deg, rgba(99,102,241,0.92), rgba(59,130,246,0.85));
-        color:#fff;
-        border:1px solid rgba(255,255,255,0.45);
-        box-shadow:0 28px 70px rgba(59,130,246,0.22);
-        transition:transform .2s ease, box-shadow .2s ease;
-      }
-      .glass-button:hover{ transform:translateY(-2px); box-shadow:0 32px 80px rgba(59,130,246,0.28); }
-      .glass-button:active{ transform:translateY(0); box-shadow:0 20px 45px rgba(59,130,246,0.28); }
-      .feature-card{
-        background:rgba(255,255,255,0.7);
-        border:1px solid rgba(148,163,184,0.35);
-        box-shadow:0 18px 45px rgba(148,163,184,0.25);
-        backdrop-filter:blur(18px) saturate(160%);
-        -webkit-backdrop-filter:blur(18px) saturate(160%);
+      a.cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 18px 45px rgba(59, 130, 246, 0.35);
       }
     </style>
   </head>
-  <body class="min-h-screen text-slate-900 font-display">
-    <div class="absolute inset-0 -z-10 overflow-hidden">
-      <div
-        class="absolute -top-64 -right-32 h-[32rem] w-[32rem] rounded-full bg-gradient-to-br from-brand-100 to-indigo-100 blur-3xl"
-      ></div>
-      <div
-        class="absolute -bottom-64 -left-24 h-[36rem] w-[36rem] rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 blur-3xl"
-      ></div>
-      <div
-        class="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.08),_transparent_60%)]"
-      ></div>
-    </div>
-
-    <main
-      class="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 py-16"
-    >
-      <div
-        class="glass-surface w-full rounded-[2.5rem] border border-slate-200 bg-white/70 p-1 shadow-glow"
-      >
-        <div
-          class="glass-surface grid gap-10 rounded-[2.4rem] bg-white/70 p-10 shadow-inner md:grid-cols-[1.15fr_0.85fr]"
-        >
-          <div class="space-y-8">
-            <span
-              class="glass-pill inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-wide"
+  <body class="flex items-center justify-center p-6">
+    <main class="glass max-w-4xl w-full rounded-3xl p-10 md:p-16">
+      <div class="grid gap-10 md:grid-cols-[1.1fr_0.9fr]">
+        <section class="space-y-6">
+          <span class="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
+            Live Drawing Lite
+          </span>
+          <h1 class="text-4xl md:text-5xl font-semibold text-white leading-tight">
+            Realtime classroom sketching powered by Convex.
+          </h1>
+          <p class="text-lg text-slate-200 leading-relaxed">
+            Start a classroom session as a teacher, share the session code with your students, and collaborate on the canvas in real time. This version replaces Supabase with Convex for low-latency syncing.
+          </p>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <a
+              href="./teacher.html"
+              class="cta inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-500 px-6 py-4 text-lg font-semibold text-white shadow-lg shadow-indigo-500/30"
             >
-              <span>Live drawing suite</span>
-            </span>
-            <div class="space-y-3">
-              <h1 class="text-4xl font-bold text-slate-900 sm:text-5xl">
-                Teach visually. Collaborate instantly.
-              </h1>
-              <p class="text-lg leading-relaxed text-slate-700">
-                Live Drawing streams pencil-perfect strokes between teachers and
-                students in real time. Instant sync, buttery smooth annotation
-                tools, and delightful classroom-ready controls built for iPad
-                and stylus workflows.
-              </p>
-            </div>
-
-            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div
-                class="feature-card rounded-2xl px-5 py-4 text-left"
-              >
-                <dt class="text-sm font-semibold text-brand-600">
-                  Palm rejection
-                </dt>
-                <dd class="text-base font-semibold text-slate-900">
-                  Stylus-first drawing
-                </dd>
-              </div>
-              <div
-                class="feature-card rounded-2xl px-5 py-4 text-left"
-              >
-                <dt class="text-sm font-semibold text-brand-600">
-                  Feedback loops
-                </dt>
-                <dd class="text-base font-semibold text-slate-900">
-                  Inline annotations
-                </dd>
-              </div>
-              <div
-                class="feature-card rounded-2xl px-5 py-4 text-left"
-              >
-                <dt class="text-sm font-semibold text-brand-600">
-                  Realtime sync
-                </dt>
-                <dd class="text-base font-semibold text-slate-900">
-                  Sub-second latency
-                </dd>
-              </div>
-            </dl>
-
-            <div
-              class="glass-surface flex flex-col gap-4 rounded-2xl border border-dashed border-brand-200/80 bg-white/60 p-6 text-left shadow-inner"
+              Teacher Console
+              <span aria-hidden="true">→</span>
+            </a>
+            <a
+              href="./student.html"
+              class="cta inline-flex items-center justify-center gap-2 rounded-2xl border border-indigo-200/50 bg-white/10 px-6 py-4 text-lg font-semibold text-indigo-100"
             >
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p
-                    class="text-sm font-semibold uppercase tracking-wide text-brand-600"
-                  >
-                    Session code
-                  </p>
-                  <p class="text-lg font-medium text-slate-800">
-                    Share this with your class to join instantly.
-                  </p>
-                </div>
-                <code
-                  class="glass-pill rounded-full px-5 py-2 text-lg font-semibold tracking-[0.35em] shadow-lg shadow-brand-600/40"
-                  >Auto</code
-                >
-              </div>
-              <p class="text-sm text-slate-600">
-                Session codes are generated automatically in the teacher view or can be supplied via URL (?session=CODE).
-              </p>
-            </div>
+              Student Canvas
+              <span aria-hidden="true">→</span>
+            </a>
           </div>
-
-          <div class="space-y-6">
-            <div
-              class="glass-surface rounded-3xl border border-slate-200 bg-white/65 p-6 shadow-xl shadow-slate-200"
-            >
-              <p
-                class="text-sm font-semibold uppercase tracking-wide text-slate-700"
-              >
-                Pick your workspace
-              </p>
-              <div class="mt-4 grid gap-4">
-                <a
-                  href="teacher.html"
-                  class="glass-button group p-5 text-left"
-                >
-                  <div>
-                  <p class="text-lg font-semibold">Teacher dashboard</p>
-                  <p class="text-sm text-white/85">
-                    Monitor every canvas, annotate live with Pencil‑smooth strokes, send templates/images, and manage the class.
-                  </p>
-                  </div>
-                  <span
-                    class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/25 text-2xl"
-                    >👩‍🏫</span
-                  >
-                </a>
-                <a
-                  href="student.html"
-                  class="glass-button group bg-gradient-to-br from-emerald-500 to-teal-500 p-5 text-left"
-                >
-                  <div>
-                  <p class="text-lg font-semibold">Student workspace</p>
-                  <p class="text-sm text-white/85">
-                    Join with a code to draw alongside the class, with undo/redo, templates, and stylus-first controls.
-                  </p>
-                  </div>
-                  <span
-                    class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/25 text-2xl"
-                    >👩‍🎓</span
-                  >
-                </a>
-              </div>
-            </div>
-            <div
-              class="glass-surface rounded-3xl border border-slate-200 bg-white/65 p-6 shadow-xl shadow-slate-200/60"
-            >
-              <h2 class="text-lg font-semibold text-slate-900">How it works</h2>
-              <ol class="mt-3 space-y-3 text-sm text-slate-700">
-                <li class="flex gap-3">
-                  <span
-                    class="glass-pill mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold"
-                    >1</span
-                  >
-                  Teacher starts a session (or uses ?session=CODE) and shares the QR/code.
-                </li>
-                <li class="flex gap-3">
-                  <span
-                    class="glass-pill mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold"
-                    >2</span
-                  >
-                  Students join, draw with Pencil‑smooth strokes, and see live teacher annotations.
-                </li>
-                <li class="flex gap-3">
-                  <span
-                    class="glass-pill mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold"
-                    >3</span
-                  >
-                  Undo/redo/clear are reliable and ownership‑aware (students cannot erase teacher strokes).
-                </li>
-              </ol>
-            </div>
-          </div>
-        </div>
+        </section>
+        <aside class="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h2 class="text-xl font-semibold text-white">What's new?</h2>
+          <ul class="space-y-4 text-sm text-slate-100">
+            <li>
+              • Convex mutations replace Supabase broadcasts for drawing, clearing, and session lifecycle events.
+            </li>
+            <li>• Participants list is backed by Convex data to track connected students.</li>
+            <li>
+              • Setup guide updated with Convex project instructions inside <code>README.md</code>.
+            </li>
+          </ul>
+        </aside>
       </div>
     </main>
   </body>
