@@ -1,199 +1,2234 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Teacher Console · Live Drawing Lite</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      body {
-        min-height: 100vh;
-        background: radial-gradient(circle at top, rgba(59, 130, 246, 0.25), transparent 55%),
-          radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.25), transparent 45%),
-          linear-gradient(130deg, #020617 0%, #0f172a 55%, #082f49 100%);
-        color: #f1f5f9;
-        font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      }
-      .glass {
-        backdrop-filter: blur(30px) saturate(180%);
-        -webkit-backdrop-filter: blur(30px) saturate(180%);
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(30, 41, 59, 0.4));
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        box-shadow: 0 35px 90px rgba(2, 6, 23, 0.45);
-      }
-      button,
-      a {
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-      }
-      button:hover,
-      a:hover {
-        transform: translateY(-1px);
-      }
-      button:active,
-      a:active {
-        transform: translateY(0);
-      }
-      .toolbar-btn.active {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(59, 130, 246, 0.85));
-        color: white;
-        border-color: rgba(255, 255, 255, 0.6);
-        box-shadow: 0 18px 45px rgba(59, 130, 246, 0.35);
-      }
-    </style>
-  </head>
-  <body class="flex min-h-screen flex-col p-5 md:p-10">
-    <header class="glass mb-8 flex flex-col gap-4 rounded-3xl px-8 py-6 md:flex-row md:items-center md:justify-between">
-      <div>
-        <p class="text-sm uppercase tracking-[0.35em] text-slate-300">Live Drawing Lite</p>
-        <h1 class="mt-2 text-3xl font-semibold text-white">Teacher Console</h1>
-      </div>
-      <nav class="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-300">
-        <a href="./index.html" class="rounded-full border border-white/10 px-4 py-2 hover:border-indigo-300 hover:text-white">Home</a>
-        <a href="./student.html" class="rounded-full border border-white/10 px-4 py-2 hover:border-indigo-300 hover:text-white">Student View</a>
-        <a href="https://docs.convex.dev/home" target="_blank" rel="noreferrer" class="rounded-full border border-white/10 px-4 py-2 hover:border-indigo-300 hover:text-white">Convex Docs</a>
-      </nav>
-    </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher - Classroom Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.08));
+      --glass-border: rgba(255,255,255,0.38);
+      --glass-shadow: 0 22px 55px rgba(15,23,42,0.18);
+      --glass-shadow-strong: 0 28px 70px rgba(15,23,42,0.28);
+      --accent-emerald: rgba(16,185,129,0.82);
+      --accent-blue: rgba(59,130,246,0.82);
+    }
+    body{
+      background: radial-gradient(circle at top, rgba(148,163,255,0.4), transparent 45%), radial-gradient(circle at bottom right, rgba(45,212,191,0.35), transparent 35%), linear-gradient(135deg, #0f172a 0%, #1e293b 45%, #0f172a 100%);
+      background-attachment: fixed;
+      position:relative;
+      overflow-x:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:radial-gradient(ellipse at top left, rgba(255,255,255,0.12), transparent 55%), radial-gradient(ellipse at bottom, rgba(148,163,255,0.18), transparent 60%);
+      pointer-events:none;
+      z-index:-1;
+    }
+    .glass-surface{
+      position:relative;
+      background:var(--glass-bg) !important;
+      border-color:var(--glass-border) !important;
+      box-shadow:var(--glass-shadow);
+      backdrop-filter:blur(22px) saturate(180%);
+      -webkit-backdrop-filter:blur(22px) saturate(180%);
+      color:#0f172a;
+    }
+    .glass-surface::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      background:linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0));
+      opacity:.65;
+      pointer-events:none;
+    }
+    .glass-surface > *{ position:relative; z-index:1; }
+    .glass-overlay{
+      background:radial-gradient(circle at top, rgba(148,163,255,0.25), transparent 55%), radial-gradient(circle at bottom, rgba(45,212,191,0.25), transparent 55%), rgba(15,23,42,0.58) !important;
+      backdrop-filter:blur(30px) saturate(180%);
+      -webkit-backdrop-filter:blur(30px) saturate(180%);
+    }
+    .canvas-frame{
+      position:relative;
+      border-radius:22px;
+      background:rgba(255,255,255,0.9) !important;
+      box-shadow:inset 0 2px 14px rgba(15,23,42,0.1), 0 28px 72px rgba(15,23,42,0.28);
+    }
+    .canvas-frame::before{
+      content:"";
+      position:absolute;
+      inset:10px;
+      border-radius:18px;
+      border:3px solid rgba(59,130,246,0.34);
+      box-shadow:0 0 0 1px rgba(255,255,255,0.5) inset;
+      pointer-events:none;
+    }
+    .canvas-frame canvas{
+      position:relative;
+      border-radius:16px;
+      border:2px solid rgba(59,130,246,0.35);
+      box-shadow:inset 0 2px 4px rgba(255,255,255,0.5), 0 18px 42px rgba(15,23,42,0.2);
+      background:#ffffff;
+    }
+    .student-card.is-flagged{
+      border-color:rgba(244,63,94,0.45) !important;
+    }
+    .student-card.is-flagged .card-meta span{
+      color:#7f1d1d !important;
+    }
+    .student-card.is-flagged .flag-toggle{
+      background:rgba(244,63,94,0.92) !important;
+      border-color:rgba(244,63,94,0.9) !important;
+      color:#fff !important;
+    }
+    .student-card.is-flagged .flag-toggle svg{
+      color:#fff;
+      fill:#fff;
+    }
+    .card-meta span{
+      color:#475569;
+    }
+    button{
+      transition:transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+    }
+    button:hover{
+      transform:translateY(-1px);
+      box-shadow:0 18px 35px rgba(15,23,42,0.22);
+    }
+    button:active{
+      transform:translateY(0);
+      box-shadow:0 10px 22px rgba(15,23,42,0.26);
+      filter:brightness(.97);
+    }
+    .glass-surface button{
+      backdrop-filter:blur(12px) saturate(150%);
+      -webkit-backdrop-filter:blur(12px) saturate(150%);
+      border-color:rgba(255,255,255,0.35);
+      box-shadow:0 12px 30px rgba(15,23,42,0.18);
+    }
+    .flag-toggle{
+      background:rgba(255,255,255,0.16);
+      color:#334155;
+    }
+    .flag-toggle.is-flagged,
+    .flag-toggle[aria-pressed="true"]{
+      background:linear-gradient(135deg, rgba(244,63,94,0.95), rgba(225,29,72,0.9)) !important;
+      border-color:rgba(244,63,94,0.95) !important;
+      color:#fff !important;
+      box-shadow:0 14px 35px rgba(244,63,94,0.28);
+    }
+    .flag-toggle.is-flagged svg,
+    .flag-toggle[aria-pressed="true"] svg{
+      color:#fff !important;
+      fill:#fff !important;
+    }
+    .glass-surface button.bg-emerald-600,
+    .glass-surface button.bg-emerald-500,
+    .glass-surface button[class*="from-blue"]{
+      background:linear-gradient(135deg, var(--accent-emerald), rgba(59,130,246,0.78)) !important;
+      color:#fff;
+      border-color:rgba(255,255,255,0.45) !important;
+    }
+    .glass-surface button.bg-emerald-600:hover,
+    .glass-surface button.bg-emerald-500:hover,
+    .glass-surface button[class*="from-blue"]:hover{
+      filter:brightness(1.05);
+    }
+    .glass-surface input[type="text"],
+    .glass-surface input[type="number"],
+    .glass-surface select{
+      background:rgba(255,255,255,0.15) !important;
+      border-color:rgba(255,255,255,0.38) !important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 25px rgba(15,23,42,0.15);
+      color:#0f172a;
+    }
+    .glass-surface input::placeholder{
+      color:rgba(15,23,42,0.55);
+    }
+    .glass-surface input:focus{
+      border-color:rgba(96,165,250,0.85) !important;
+      box-shadow:0 0 0 4px rgba(96,165,250,0.25);
+    }
+    .color-btn {
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .color-btn:hover {
+      transform: scale(1.05);
+    }
+    .color-btn.active {
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.95), 0 0 0 6px rgba(139, 92, 246, 0.3);
+      border-color: rgba(139, 92, 246, 0.65);
+    }
+    .tool-btn,
+    .action-btn,
+    .flag-toggle,
+    #teacherStylusToggle,
+    #swapTeacherToolbarBtn,
+    #stylusToggle,
+    #modalFlagBtn,
+    #headerTplClearBtn,
+    #prepPickImg,
+    .btn,
+    label.inline-flex,
+    .glass-chip,
+    .glass-surface input[type="checkbox"] + span {
+      background: rgba(255,255,255,0.16);
+      border-color: rgba(255,255,255,0.35);
+      color: #0f172a;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 12px 28px rgba(15,23,42,0.12);
+    }
+    .glass-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:0.6rem;
+      border-radius:999px;
+      padding:10px 16px;
+      backdrop-filter:blur(16px) saturate(160%);
+      -webkit-backdrop-filter:blur(16px) saturate(160%);
+    }
+    .glass-button{
+      display:inline-flex;
+      align-items:center;
+      gap:0.6rem;
+      border-radius:999px;
+      background:linear-gradient(135deg, var(--accent-emerald), rgba(59,130,246,0.78));
+      border:1px solid rgba(255,255,255,0.45);
+      color:#fff;
+      padding:10px 18px;
+      box-shadow:0 24px 60px rgba(59,130,246,0.25);
+      transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .glass-button:hover{ transform:translateY(-1px); box-shadow:0 28px 70px rgba(59,130,246,0.3); filter:brightness(1.05); }
+    .glass-button:active{ transform:translateY(0); box-shadow:0 18px 45px rgba(59,130,246,0.28); filter:brightness(.97); }
+    .chip-input{
+      border:none;
+      background:transparent;
+      outline:none;
+      color:#0f172a;
+      font-weight:600;
+      letter-spacing:0.02em;
+      width:100%;
+    }
+    .tool-btn.active {
+      background: rgb(139 92 246);
+      color: white;
+      border-color: rgb(139 92 246);
+      box-shadow: 0 10px 25px rgba(139, 92, 246, 0.25);
+    }
+    .stylus-indicator.off {
+      background: rgb(226 232 240);
+      color: rgb(100 116 139);
+    }
+    #status{
+      background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(14,165,233,0.12)) !important;
+      border-color: rgba(59,130,246,0.45) !important;
+      box-shadow: 0 18px 38px rgba(59,130,246,0.2);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+    }
+    #overlay {
+      touch-action: none; /* crucial for iPad drawing */
+    }
+    canvas {
+      touch-action: none; /* crucial for iPad drawing */
+    }
+    /* Selection states in the question panel */
+    #questionPanel button[data-mode].is-active{
+      background: rgb(59 130 246);
+      color: #fff;
+      border-color: rgb(59 130 246);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.35);
+      font-weight: 700;
+    }
+    /* Toasts: stacked, glassy */
+    #toasts{position:fixed; right:20px; bottom:20px; display:flex; flex-direction:column; gap:10px; z-index:10000; pointer-events:none}
+    .toast{
+      position:fixed; right:20px; bottom:20px;
+      color:#fff;
+      padding:12px 16px; border-radius:14px; font-size:13px; font-weight:700;
+      background: linear-gradient(135deg, rgba(15,23,42,0.75), rgba(15,23,42,0.6));
+      border: 1px solid rgba(255,255,255,0.25);
+      box-shadow: 0 18px 50px rgba(2,6,23,0.35), inset 0 0 0 1px rgba(255,255,255,0.08);
+      opacity:0; transform:translateY(10px) scale(.98);
+      transition:opacity .2s ease, transform .2s ease, background .2s ease;
+      z-index:9999; backdrop-filter: blur(8px) saturate(140%);
+      pointer-events:auto
+    }
+    .toast.is-visible{opacity:1; transform:translateY(0) scale(1)}
+    .toast.toast-warn{background: linear-gradient(135deg, rgba(180,83,9,0.82), rgba(180,83,9,0.66));}
+    .toast.toast-success{background: linear-gradient(135deg, rgba(5,150,105,0.82), rgba(5,150,105,0.66));}
 
-    <main class="glass grid flex-1 gap-10 rounded-[42px] border border-white/10 p-8 md:grid-cols-[380px_minmax(0,1fr)]">
-      <aside class="space-y-8">
-        <section class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
-          <h2 class="text-xl font-semibold text-white">Connection</h2>
-          <p class="text-sm leading-relaxed text-slate-300">
-            Paste your deployed Convex URL. We store it locally so you only set it once per device.
-          </p>
-          <form id="connectionForm" class="space-y-3">
-            <label class="block text-sm font-medium text-slate-200" for="convexUrlInput">Convex deployment URL</label>
-            <input
-              id="convexUrlInput"
-              class="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-              placeholder="https://your-project.convex.cloud"
-              autocomplete="off"
-            />
-            <button
-              type="submit"
-              class="w-full rounded-2xl border border-indigo-300/40 bg-indigo-500/80 px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-500"
-            >
-              Save connection
-            </button>
-          </form>
-        </section>
+    /* Skeleton shimmer */
+    .skeleton{ position:absolute; inset:0; border-radius:16px; background: linear-gradient(90deg, rgba(226,232,240,0.6), rgba(226,232,240,0.3), rgba(226,232,240,0.6)); background-size:200% 100%; animation: sk 1.2s ease-in-out infinite; }
+    @keyframes sk { 0%{ background-position:200% 0 } 100%{ background-position:-200% 0 } }
 
-        <section class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
-          <h2 class="text-xl font-semibold text-white">Session</h2>
-          <form id="sessionForm" class="space-y-4">
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-slate-200" for="teacherNameInput">Your name</label>
+    /* Focus ring for accessibility */
+    button:focus-visible, select:focus-visible, input:focus-visible{
+      outline: 3px solid #93c5fd; outline-offset: 2px;
+    }
+
+    /* Student card activity pulse */
+    .card-hot{ box-shadow: 0 0 0 3px rgba(16,185,129,0.35), 0 18px 40px rgba(16,185,129,0.18) !important; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-sky-100 via-white to-slate-100 p-6 text-slate-700">
+  <div class="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
+    <header class="glass-surface rounded-[28px] border border-slate-200 bg-white/80 p-6 shadow-[0_30px_70px_rgba(30,64,175,0.18)] backdrop-blur">
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 class="text-3xl font-bold text-slate-900">Teacher Dashboard</h1>
+            <p class="mt-2 max-w-xl text-sm text-slate-700">
+              Monitor every student's canvas and annotate live with the shared toolbar.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="glass-chip px-5 py-3">
+              <span class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Session code</span>
               <input
-                id="teacherNameInput"
-                class="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-base text-white placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                placeholder="Mrs. Garcia"
-                maxlength="40"
-                required
+                type="text"
+                id="sessionInput"
+                value=""
+                class="chip-input w-[9.5rem] text-2xl font-extrabold uppercase tracking-[0.45em] leading-none"
               />
             </div>
             <button
               id="startSessionBtn"
-              type="submit"
-              class="w-full rounded-2xl border border-emerald-300/40 bg-emerald-500/80 px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-500"
-            >
-              Start new session
-            </button>
-            <button
-              id="endSessionBtn"
               type="button"
-              class="w-full rounded-2xl border border-rose-300/40 bg-rose-500/30 px-5 py-3 text-center text-sm font-semibold text-rose-100 hover:bg-rose-500/40 disabled:cursor-not-allowed disabled:opacity-40"
-              disabled
+              class="glass-button px-4 py-2 text-sm font-semibold"
             >
-              End session
+              Start session
             </button>
-          </form>
-          <div class="rounded-2xl border border-indigo-300/30 bg-indigo-500/10 p-4 text-sm text-indigo-100" id="sessionInfo">
-            Session code: <span class="font-semibold text-white" id="sessionCode">—</span>
-          </div>
-        </section>
-
-        <section class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
-          <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-white">Participants</h2>
-            <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs uppercase tracking-wider text-slate-200" id="participantCount">
-              0 online
-            </span>
-          </div>
-          <ul class="space-y-3 text-sm text-slate-200" id="participantList">
-            <li class="text-slate-400">Nobody has joined yet.</li>
-          </ul>
-        </section>
-
-        <section class="space-y-2 rounded-3xl border border-white/10 bg-white/5 p-5">
-          <h2 class="text-base font-semibold text-slate-200">Status</h2>
-          <p id="statusBanner" class="text-sm leading-relaxed text-slate-300">
-            Configure Convex and start a session to begin drawing.
-          </p>
-        </section>
-      </aside>
-
-      <section class="flex flex-col gap-6">
-        <div class="glass flex flex-wrap items-center gap-3 rounded-3xl border border-white/10 px-5 py-4">
-          <div class="flex items-center gap-2 text-sm font-medium text-slate-200">
-            Tool:
-            <button data-tool="pen" class="toolbar-btn rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white">Pen</button>
-            <button data-tool="eraser" class="toolbar-btn rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white">
-              Eraser
-            </button>
-          </div>
-          <div class="flex items-center gap-2 text-sm font-medium text-slate-200">
-            Color:
-            <button data-color="#0f172a" class="color-btn h-9 w-9 rounded-full border border-white/20 bg-[#0f172a]"></button>
-            <button data-color="#2563eb" class="color-btn h-9 w-9 rounded-full border border-white/20 bg-[#2563eb]"></button>
-            <button data-color="#f97316" class="color-btn h-9 w-9 rounded-full border border-white/20 bg-[#f97316]"></button>
-            <button data-color="#16a34a" class="color-btn h-9 w-9 rounded-full border border-white/20 bg-[#16a34a]"></button>
-          </div>
-          <label class="ml-auto flex items-center gap-2 text-sm font-medium text-slate-200">
-            Size
-            <input
-              id="brushSizeInput"
-              type="range"
-              min="2"
-              max="20"
-              value="6"
-              class="h-1 w-36 cursor-pointer appearance-none rounded-full bg-white/20"
-            />
-          </label>
-          <div class="flex items-center gap-2">
-            <button
-              id="undoBtn"
-              type="button"
-              class="rounded-2xl border border-blue-200/40 bg-blue-500/20 px-4 py-2 text-sm font-semibold text-blue-100 hover:bg-blue-500/30 disabled:cursor-not-allowed disabled:opacity-40"
-              disabled
+            <div
+              id="status"
+              class="glass-chip px-4 py-2 text-sm font-semibold text-blue-700"
             >
-              Undo
-            </button>
-            <button
-              id="redoBtn"
-              type="button"
-              class="rounded-2xl border border-sky-200/40 bg-sky-500/20 px-4 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-500/30 disabled:cursor-not-allowed disabled:opacity-40"
-              disabled
-            >
-              Redo
-            </button>
-            <button
-              id="clearCanvasBtn"
-              type="button"
-              class="rounded-2xl border border-amber-200/40 bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/30 disabled:cursor-not-allowed disabled:opacity-40"
-              disabled
-            >
-              Clear canvas
-            </button>
+              Not connected
+            </div>
           </div>
         </div>
 
-        <div class="relative flex-1 overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-2xl" style="min-height: 520px;">
-          <canvas id="board" class="h-full w-full"></canvas>
-        </div>
-      </section>
-    </main>
+        <div
+          id="sessionInfo"
+          class="glass-surface hidden rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50/90 to-teal-50/90 p-4 shadow-lg backdrop-blur-sm"
+        >
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex w-full flex-wrap items-center gap-3 lg:justify-between">
+            <span id="sessionCode" class="sr-only"></span>
+            <div class="flex w-full flex-wrap items-center gap-3 lg:w-auto lg:flex-nowrap">
+              <div class="flex items-center gap-3">
+                <div id="qrCode" class="rounded-2xl border border-white bg-white p-2 shadow-md"></div>
+                <button
+                  id="copyUrlBtn"
+                  type="button"
+                  class="glass-button px-4 py-2 text-sm font-semibold"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8z"/></svg>
+                  Copy URL
+                </button>
+              </div>
+              <div class="glass-chip ml-auto flex items-center gap-2 px-5 py-3 lg:ml-6">
+                <span class="inline-flex h-2.5 w-2.5 items-center justify-center rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+                <span id="studentCount" class="text-2xl font-extrabold text-slate-900">0</span>
+                <span class="text-sm font-semibold text-slate-600">online</span>
+              </div>
+            </div>
+          </div>
+          </div>
 
-    <script src="./js/config-bootstrap.js"></script>
-    <script type="module" src="./js/teacher.js"></script>
-  </body>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <input id="joinUrl" type="text" readonly class="hidden" />
+            <div class="glass-chip flex grow basis-full items-center gap-2 px-4 py-2 md:basis-auto">
+              <svg class="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M18 10.5a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z"/></svg>
+              <input id="studentFilter" type="text" placeholder="Filter students" class="chip-input" />
+            </div>
+            <label class="glass-chip cursor-pointer px-4 py-2 text-xs font-semibold text-slate-700">
+              <input id="hideNamesToggle" type="checkbox" class="accent-emerald-600" />
+              <span>Hide names</span>
+            </label>
+            <button
+              id="flagFilterBtn"
+              type="button"
+              class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 transition"
+              aria-pressed="false"
+            >
+              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M6 3v14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"></path>
+                <path d="M6.5 4.2h7.2l-2.2 3.3 2.2 3.3H6.5Z"></path>
+              </svg>
+              <span>Flagged only</span>
+            </button>
+            <div id="gridColumnsWrap" class="glass-chip relative inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 cursor-pointer">
+              <span>Cards/row</span>
+              <span id="gridColumnsValue" class="inline-flex items-center gap-1 font-bold text-emerald-700"><span id="gridColumnsValueNum">3</span>
+                <svg class="ml-1 h-3 w-3 text-emerald-700" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/></svg>
+              </span>
+              <select id="gridColumnsSelect" class="absolute inset-0 opacity-0 appearance-none cursor-pointer" title="Cards per row" aria-label="Cards per row">
+                <option value="auto">Auto</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question preparation panel -->
+      <div id="questionPanel" class="glass-surface mt-4 hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/80 to-indigo-50/80 p-4 shadow-lg backdrop-blur-sm">
+        <div class="flex items-center gap-3 border-b border-blue-200/50 pb-3">
+          <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span class="text-sm font-bold text-blue-900">Prepare Next Question</span>
+          <span id="stagedBadge" class="hidden ml-auto rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm"></span>
+          <div class="ml-auto flex items-center gap-2">
+          <button id="sendQuestionBtn" class="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-2 text-sm font-bold text-white shadow-md transition hover:from-blue-500 hover:to-blue-400 disabled:opacity-40 disabled:cursor-not-allowed">
+            Send to class
+          </button>
+          </div>
+        </div>
+        <p id="sendHint" class="mt-2 hidden rounded-lg bg-rose-100 px-3 py-2 text-xs font-semibold text-rose-700">Choose a template or image before sending.</p>
+        
+        <div class="mt-3 flex items-start gap-4">
+          <!-- Left side: Controls -->
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <button data-mode="blank" id="modeBlank" class="rounded-lg border-2 border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">Blank canvas</button>
+              <button data-mode="tpl" id="modeTpl" class="rounded-lg border-2 border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">Templates</button>
+              <button data-mode="image" id="modeImg" class="rounded-lg border-2 border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">Send image</button>
+            </div>
+            
+            <div id="tplControls" class="mt-3 hidden rounded-lg border-2 border-blue-200 bg-blue-50/30 p-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <button id="prepHanzi" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">Hanzi box</button>
+                <button id="prepGraphCorner" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">Graph (corner)</button>
+                <button id="prepGraphCross" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">Graph (cross)</button>
+              </div>
+            </div>
+            
+            <div id="imgControls" class="mt-3 hidden rounded-lg border-2 border-blue-200 bg-blue-50/30 p-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <button id="prepPickImg" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">Choose image…</button>
+                <span id="prepImgName" class="text-[11px] text-slate-700"></span>
+                <input id="prepImgInput" type="file" accept="image/*" class="hidden" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right side: Preview -->
+          <div id="nextPreviewWrap" class="flex flex-col items-center gap-1.5 flex-shrink-0">
+            <div class="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+              <canvas id="nextPreview" width="160" height="120" class="block" style="width:160px;height:120px"></canvas>
+            </div>
+            <span class="text-[11px] text-slate-400">Tiny preview (local only)</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div
+      id="emptyState"
+      class="flex flex-1 flex-col items-center justify-center rounded-[28px] border-2 border-dashed border-emerald-300 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 p-16 text-center backdrop-blur-sm"
+    >
+      <svg class="h-16 w-16 text-emerald-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <h2 class="text-2xl font-bold text-slate-800">Waiting for students to join...</h2>
+      <p class="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
+        Share the <strong class="rounded bg-emerald-600 px-1.5 py-0.5 text-xs font-bold text-white">session code</strong> or <strong class="font-semibold text-emerald-700">QR code</strong> shown above. Students will appear here once they connect.
+      </p>
+    </div>
+
+    <div id="students" class="grid gap-5" style="grid-template-columns: repeat(3, minmax(0, 1fr));"></div>
+  </div>
+
+  <div
+    id="modal"
+    class="glass-overlay invisible pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
+  >
+    <div class="glass-surface pointer-events-auto flex w-full max-w-[1120px] flex-col gap-3 rounded-[24px] border border-slate-200 bg-white/85 p-3 shadow-[0_35px_80px_rgba(30,64,175,0.2)]">
+      <div class="modal-header flex items-center justify-between rounded-2xl border border-slate-200 bg-white/70 px-3 py-2.5">
+        <div class="min-w-0">
+          <h2 id="modalTitle" class="text-lg font-semibold tracking-tight text-slate-900">Annotating Student</h2>
+          <p class="text-xs font-semibold text-slate-600">Use the toolbar to add notes directly onto the student's canvas.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            id="modalFlagBtn"
+            type="button"
+            class="flag-toggle inline-flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold shadow-sm transition focus:outline-none focus:ring-4 focus:ring-emerald-200"
+            aria-pressed="false"
+          >
+            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M6 3v14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"></path>
+              <path d="M6.6 4.4h7l-2.1 3.1 2.1 3.1h-7Z"></path>
+            </svg>
+            <span>Flag</span>
+          </button>
+          <button
+            id="teacherStylusToggle"
+            class="stylus-indicator inline-flex items-center rounded-lg bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-700 transition hover:bg-blue-200"
+          >
+            Stylus mode (pen only)
+          </button>
+          <button
+            id="swapTeacherToolbarBtn"
+            type="button"
+            class="inline-flex items-center justify-center rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-blue-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200"
+          >
+            Move toolbar to right
+          </button>
+          <button
+            id="closeModal"
+            type="button"
+            class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+      <div id="teacherWorkspace" class="flex flex-1 min-h-0 items-stretch gap-3 overflow-hidden">
+        <div
+          id="teacherToolbar"
+          class="glass-surface flex min-h-0 w-[158px] flex-col rounded-3xl border border-slate-200 bg-white/95 p-3 text-slate-700 shadow-[0_22px_55px_rgba(15,23,42,0.16)]"
+        >
+          <div class="flex-1 space-y-4 overflow-y-auto pr-1">
+            <div class="flex flex-col items-center gap-3">
+              <span class="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-600">Colors</span>
+              <div id="teacherColorPalette" class="flex flex-col items-center gap-2.5"></div>
+            </div>
+            <div class="space-y-3">
+              <span class="block text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-600">Tools</span>
+              <div class="flex flex-col gap-2">
+                <button
+                  class="tool-btn rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                  data-tool="pen"
+                >
+                  Pen
+                </button>
+                <button
+                  class="tool-btn rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                  data-tool="eraser"
+                >
+                  Eraser
+                </button>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <span class="block text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-600">Brush Size</span>
+              <div class="flex items-center justify-between gap-2 rounded-2xl bg-slate-50 px-2.5 py-2 shadow-inner">
+                <input
+                  type="range"
+                  id="teacherBrushSize"
+                  min="1"
+                  max="20"
+                  value="4"
+                  class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-blue-500"
+                />
+                <span id="teacherSizeDisplay" class="text-xs font-bold text-slate-800">4</span>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <span class="block text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-600">History</span>
+              <div class="flex flex-col gap-2">
+                <button
+                  id="teacherUndoBtn"
+                  class="action-btn rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                  disabled
+                >
+                  Undo
+                </button>
+                <button
+                  id="teacherRedoBtn"
+                  class="action-btn rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                  disabled
+                >
+                  Redo
+                </button>
+                <button
+                  id="teacherClearBtn"
+                  class="action-btn rounded-lg bg-rose-100 px-2.5 py-1 text-[11px] font-semibold text-rose-600 shadow-sm transition hover:bg-rose-200 disabled:cursor-not-allowed disabled:opacity-40"
+                  disabled
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+        <div class="glass-surface flex min-h-0 flex-1 items-center justify-center rounded-[24px] border border-slate-200 bg-white/65 p-3 shadow-inner">
+          <div
+            id="teacherStage"
+            class="glass-surface flex h-full max-h-[640px] w-full max-w-[840px] flex-1 items-center justify-center overflow-hidden rounded-[20px] border border-slate-200 bg-white p-3 shadow-[0_20px_55px_rgba(15,23,42,0.12)]"
+          >
+            <div class="relative">
+              <canvas
+                id="bigCanvas"
+                width="800"
+                height="600"
+                class="block max-h-full max-w-full rounded-2xl bg-white shadow-inner shadow-slate-900/5"
+              ></canvas>
+              <canvas
+                id="overlay"
+                width="800"
+                height="600"
+                class="pointer-events-auto absolute left-0 top-0 max-h-full max-w-full rounded-2xl"
+              ></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="toasts" aria-live="polite" aria-atomic="true"></div>
+  <div id="reconnectBar" class="hidden fixed top-0 left-0 right-0 bg-amber-500 text-white text-center py-2 text-sm font-semibold z-[10000] shadow-lg">
+    Reconnecting...
+  </div>
+
+  <script>
+    window.SUPABASE_URL = "https://eytswszeopdxmtxxbkrb.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5dHN3c3plb3BkeG10eHhia3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NTI5ODQsImV4cCI6MjA3NDEyODk4NH0.7skddGtrUoXluvK9JDS54bpmKCxVYeofzWATmJIgABE";
+  </script>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/+esm';
+
+    const COLOR_PRESETS = [
+      { label: 'Red', value: '#ef4444' },
+      { label: 'Purple', value: '#8b5cf6' },
+      { label: 'Teal', value: '#0d9488' }
+    ];
+
+    const MIN_SAMPLE_DISTANCE = 0.45;
+    const INTERPOLATION_STEP = 3.2;
+
+    const studentsGrid = document.getElementById('students');
+    const emptyState = document.getElementById('emptyState');
+    const statusBadge = document.getElementById('status');
+    const sessionInput = document.getElementById('sessionInput');
+    // const generateCodeBtn = document.getElementById('generateCodeBtn'); // removed
+    const startSessionBtn = document.getElementById('startSessionBtn');
+    const sessionInfo = document.getElementById('sessionInfo');
+    const sessionCodeEl = document.getElementById('sessionCode');
+    const studentCountEl = document.getElementById('studentCount');
+    const qrCodeCanvas = document.getElementById('qrCode');
+    const joinUrlInput = document.getElementById('joinUrl');
+    const copyUrlBtn = document.getElementById('copyUrlBtn');
+    const hideNamesToggle = document.getElementById('hideNamesToggle');
+    const studentFilter = document.getElementById('studentFilter');
+    const flagFilterBtn = document.getElementById('flagFilterBtn');
+    const gridColumnsWrap = document.getElementById('gridColumnsWrap');
+    const gridColumnsValue = document.getElementById('gridColumnsValueNum');
+    const gridColumnsSelect = document.getElementById('gridColumnsSelect');
+
+    // Question panel elements
+    const questionPanel = document.getElementById('questionPanel');
+    const sendQuestionBtn = document.getElementById('sendQuestionBtn');
+    const modeBlankBtn = document.getElementById('modeBlank');
+    const modeTplBtn = document.getElementById('modeTpl');
+    const modeImgBtn = document.getElementById('modeImg');
+    const tplControls = document.getElementById('tplControls');
+    const imgControls = document.getElementById('imgControls');
+    const prepHanzi = document.getElementById('prepHanzi');
+    const prepGraphCorner = document.getElementById('prepGraphCorner');
+    const prepGraphCross = document.getElementById('prepGraphCross');
+    const prepPickImg = document.getElementById('prepPickImg');
+    const prepImgInput = document.getElementById('prepImgInput');
+    const prepImgName = document.getElementById('prepImgName');
+    const nextPreview = document.getElementById('nextPreview');
+    const nextPrevCtx = nextPreview?.getContext('2d');
+    const toastStack = document.getElementById('toasts');
+    const stagedBadge = document.getElementById('stagedBadge');
+    const sendHint = document.getElementById('sendHint');
+    const reconnectBar = document.getElementById('reconnectBar');
+
+    function showToast(msg, kind){
+      if(!toastStack) return;
+      const div = document.createElement('div');
+      div.className = `toast ${kind?`toast-${kind}`:''}`;
+      div.textContent = msg;
+      // stack it
+      const items = toastStack.querySelectorAll('.toast');
+      const offset = items.length * 50; // stack spacing
+      div.style.bottom = `${20 + offset}px`;
+      toastStack.appendChild(div);
+      requestAnimationFrame(()=> div.classList.add('is-visible'));
+      setTimeout(()=>{
+        div.classList.remove('is-visible');
+        setTimeout(()=> div.remove(), 250);
+      }, 2500);
+    }
+
+    function showReconnectBar(){ reconnectBar?.classList.remove('hidden'); }
+    function hideReconnectBar(){ reconnectBar?.classList.add('hidden'); }
+
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalFlagBtn = document.getElementById('modalFlagBtn');
+    const closeModal = document.getElementById('closeModal');
+    const bigCanvas = document.getElementById('bigCanvas');
+    const bigCtx = bigCanvas.getContext('2d', { alpha: false, desynchronized: true });
+    const overlay = document.getElementById('overlay');
+    const overlayCtx = overlay.getContext('2d', { alpha: true, desynchronized: true });
+
+    const teacherToolbar = document.getElementById('teacherToolbar');
+    const teacherColorPalette = document.getElementById('teacherColorPalette');
+    const teacherToolButtons = Array.from(teacherToolbar.querySelectorAll('.tool-btn'));
+    const teacherBrushSize = document.getElementById('teacherBrushSize');
+    const teacherSizeDisplay = document.getElementById('teacherSizeDisplay');
+    const teacherUndoBtn = document.getElementById('teacherUndoBtn');
+    const teacherRedoBtn = document.getElementById('teacherRedoBtn');
+    const teacherClearBtn = document.getElementById('teacherClearBtn');
+    const teacherStylusToggle = document.getElementById('teacherStylusToggle');
+    const swapTeacherToolbarBtn = document.getElementById('swapTeacherToolbarBtn');
+    const teacherWorkspace = document.getElementById('teacherWorkspace');
+    const teacherStage = document.getElementById('teacherStage');
+    // removed sidebar template buttons
+    const headerHanziBtn = document.getElementById('headerHanziBtn');
+    const headerGraphCornerBtn = document.getElementById('headerGraphCornerBtn');
+    const headerGraphCrossBtn = document.getElementById('headerGraphCrossBtn');
+    const headerTplClearBtn = document.getElementById('headerTplClearBtn');
+    const headerImageBtn = document.getElementById('headerImageBtn');
+    const headerImageInput = document.getElementById('headerImageInput');
+
+    overlay.style.touchAction = 'none';
+    const usePointerRawUpdate = 'onpointerrawupdate' in window;
+
+    /* ----------------- Pointer filtering for stylus mode ----------------- */
+    function supportedPointer(e) {
+      const t = (e.pointerType || '').toLowerCase();
+      if (teacherStylusOnly) return t === '' || t === 'pen';
+      return t === '' || t === 'pen' || t === 'mouse' || t === 'touch';
+    }
+
+    /* ----------------- Sync helpers ----------------- */
+    const lastSeqByUser = new Map();
+    function isValidEnvelope(env){
+      if(!env) return true; // backward compatibility
+      if(env.s && env.s !== sessionCode) return false;
+      if(env.v && env.v !== 1) return false;
+      return true;
+    }
+    function acceptSeq(username, env){
+      if(!env || typeof env.seq !== 'number') return true; // allow old clients
+      const last = lastSeqByUser.get(username) || 0;
+      if(env.seq <= last) return false;
+      lastSeqByUser.set(username, env.seq);
+      return true;
+    }
+
+    function scheduleRenderStudent(student){
+      if(!student) return;
+      if(student._renderQueued) return;
+      student._renderQueued = true;
+      requestAnimationFrame(()=>{ try{ renderStudent(student); }finally{ student._renderQueued = false; } });
+    }
+
+    let supabaseClient = null;
+    let channel = null;
+    let sessionCode = '';
+    // 6-character alphanumeric (A-Z, 0-9)
+    function generateAlphanumericCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789'; // exclude ambiguous I/O
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return code;
+    }
+
+    function setSessionCode(code) {
+      sessionCode = (code || '').toUpperCase();
+      sessionInput.value = sessionCode;
+      // Build join URL for students
+      try {
+        const base = new URL(window.location.href);
+        base.search = '';
+        base.hash = '';
+        base.pathname = base.pathname.replace('teacher.html', 'student.html');
+        const join = new URL(base);
+        join.searchParams.set('session', sessionCode);
+        if (joinUrlInput) joinUrlInput.value = join.toString();
+        if (qrCodeCanvas && typeof QRCode !== 'undefined') {
+          qrCodeCanvas.innerHTML = '';
+          new QRCode(qrCodeCanvas, { text: join.toString(), width: 120, height: 120 });
+        }
+      } catch {}
+    }
+
+    // Wire generator button
+    // generateCodeBtn removed
+
+    // Initialize session code from URL param if present, else from input, else generate
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const qp = (params.get('session') || '').trim();
+      if (qp) {
+        setSessionCode(qp);
+      } else if (sessionInput.value.trim()) {
+        setSessionCode(sessionInput.value.trim());
+      } else {
+        setSessionCode(generateAlphanumericCode());
+      }
+    } catch {
+      if (!sessionInput.value.trim()) setSessionCode(generateAlphanumericCode());
+      else setSessionCode(sessionInput.value.trim());
+    }
+
+    const students = new Map();
+    let showFlaggedOnly = false;
+    const activeRemoteStrokes = new Map();
+
+    let currentStudent = null;
+    
+    // Always confirm before leaving/refreshing the teacher page
+    // Note: Modern browsers require user interaction before beforeunload works
+    let isLeavingPage = false;
+    let sessionEnding = false;
+
+    function broadcastSessionEnd(){
+      if(sessionEnding) return;
+      sessionEnding = true;
+      try {
+        channel?.send({ type:'broadcast', event:'teacher_end_session', payload:{} });
+      } catch (err) {
+        console.error('[END] Failed to broadcast session end:', err);
+      }
+    }
+    
+    window.addEventListener('beforeunload', (e) => {
+      // Show confirmation dialog
+      e.preventDefault();
+      e.returnValue = 'Are you sure you want to leave? This will end the session for all students.';
+      
+      // Set flag that we're potentially leaving
+      isLeavingPage = true;
+      // If still here after 200ms, user cancelled the navigation
+      setTimeout(() => { 
+        isLeavingPage = false; 
+        sessionEnding = false;
+      }, 200);
+
+      return e.returnValue;
+    });
+    
+    // Force user interaction immediately on load by adding an invisible overlay
+    // This ensures beforeunload works without requiring manual clicks
+    window.addEventListener('DOMContentLoaded', () => {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;cursor:default;background:transparent;';
+      overlay.title = 'Click anywhere to activate session protection';
+      
+      const handleInteraction = () => {
+        overlay.remove();
+        
+      };
+      
+      overlay.addEventListener('click', handleInteraction);
+      overlay.addEventListener('touchstart', handleInteraction);
+      overlay.addEventListener('keydown', handleInteraction);
+      
+      document.body.appendChild(overlay);
+      
+      // Auto-remove after first interaction or 5 seconds
+      setTimeout(() => {
+        if (overlay.parentNode) {
+          overlay.remove();
+          
+        }
+      }, 5000);
+    });
+
+    // Persist teacher drawing preferences
+    function loadTeacherPrefs(){
+      try {
+        const saved = localStorage.getItem('teacher_prefs');
+        
+        if (!saved) {
+          
+          return { color: COLOR_PRESETS[0].value, tool: 'pen', brush: 4, stylusOnly: true, toolbarOnLeft: true };
+        }
+        const parsed = JSON.parse(saved);
+        
+        return parsed;
+      } catch (e) { 
+        console.error('[LOAD] Error loading prefs:', e);
+        return { color: COLOR_PRESETS[0].value, tool: 'pen', brush: 4, stylusOnly: true, toolbarOnLeft: true }; 
+      }
+    }
+    function saveTeacherPrefs(prefs){
+      try { 
+        
+        localStorage.setItem('teacher_prefs', JSON.stringify(prefs)); 
+        
+      } catch (e) {
+        console.error('[SAVE] Error saving prefs:', e);
+      }
+    }
+    const prefs = loadTeacherPrefs();
+    let teacherCurrentColor = prefs.color;
+    let teacherCurrentTool = prefs.tool;
+    let teacherBrush = prefs.brush;
+    let teacherStylusOnly = prefs.stylusOnly;
+    let teacherToolbarOnLeft = prefs.toolbarOnLeft;
+    
+
+    // ===== Template overlay (sent once, centered) =====
+    let templateImage = null; // HTMLImageElement or null
+    let templateFit = 0.9;    // 0..1 fit factor (hanzi larger)
+    function drawTemplateIfAny(ctx) {
+      if (!templateImage) return;
+      const srcW = templateImage.naturalWidth;
+      const srcH = templateImage.naturalHeight;
+      const dstW = bigCanvas.width;
+      const dstH = bigCanvas.height;
+      const scale = Math.min(dstW / srcW, dstH / srcH) * templateFit; // fit with margin
+      const drawW = Math.round(srcW * scale);
+      const drawH = Math.round(srcH * scale);
+      const dx = Math.round((dstW - drawW) / 2);
+      const dy = Math.round((dstH - drawH) / 2);
+      ctx.drawImage(templateImage, dx, dy, drawW, drawH);
+    }
+
+    let annotationPointerId = null;
+    let activeAnnotationStroke = null;
+    let teacherErasing = false;
+    let teacherLastErasePoint = null;
+    let erasedAnnotationIds = new Set();
+
+    function setStatus(state, text) {
+      statusBadge.textContent = text;
+      statusBadge.className = 'inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition-colors';
+      if (state === 'connected') {
+        statusBadge.classList.add('border', 'border-emerald-200', 'bg-emerald-100', 'text-emerald-700');
+      } else if (state === 'error') {
+        statusBadge.classList.add('border', 'border-rose-200', 'bg-rose-100', 'text-rose-600');
+      } else {
+        statusBadge.classList.add('border', 'border-blue-200', 'bg-blue-100', 'text-blue-700');
+      }
+    }
+
+    function appendPointWithInterpolation(array, point) {
+      if (!point) return;
+      const last = array[array.length - 1];
+      if (last) {
+        const dx = point.x - last.x;
+        const dy = point.y - last.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < MIN_SAMPLE_DISTANCE) {
+          last.x += dx * 0.5;
+          last.y += dy * 0.5;
+          return;
+        }
+        const steps = Math.min(6, Math.floor(dist / INTERPOLATION_STEP));
+        for (let i = 1; i < steps; i++) {
+          const t = i / steps;
+          array.push({ x: last.x + dx * t, y: last.y + dy * t });
+        }
+      }
+      array.push(point);
+    }
+
+    function appendSamples(array, samples) {
+      samples.forEach(sample => appendPointWithInterpolation(array, { x: sample.x, y: sample.y }));
+    }
+
+    function drawSmoothStrokePath(targetCtx, points, color, size) {
+      if (!points?.length) return;
+      const strokeColor = color || '#111827';
+      const strokeSize = Math.max(0.5, Number.isFinite(size) ? size : 3);
+
+      targetCtx.save();
+      targetCtx.lineCap = 'round';
+      targetCtx.lineJoin = 'round';
+      targetCtx.strokeStyle = strokeColor;
+      targetCtx.lineWidth = strokeSize;
+      targetCtx.fillStyle = strokeColor;
+
+      if (points.length === 1) {
+        targetCtx.beginPath();
+        targetCtx.arc(points[0].x, points[0].y, strokeSize / 2, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.restore();
+        return;
+      }
+
+      targetCtx.beginPath();
+      targetCtx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < points.length - 1; i++) {
+        const p0 = i === 0 ? points[0] : points[i - 1];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const p3 = i + 2 < points.length ? points[i + 2] : points[i + 1];
+
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+        targetCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+      }
+
+      targetCtx.stroke();
+      targetCtx.restore();
+    }
+
+    function distToSegmentSquared(px, py, x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len2 = dx * dx + dy * dy;
+      if (len2 === 0) return (px - x1) ** 2 + (py - y1) ** 2;
+      let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+      t = Math.max(0, Math.min(1, t));
+      const qx = x1 + t * dx;
+      const qy = y1 + t * dy;
+      return (px - qx) ** 2 + (py - qy) ** 2;
+    }
+
+    function renderColorPalette(container, onSelect, currentValue) {
+      container.innerHTML = '';
+      COLOR_PRESETS.forEach(preset => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'color-btn flex h-9 w-9 items-center justify-center rounded-full border-2 border-transparent shadow-sm';
+        btn.dataset.color = preset.value;
+        btn.title = preset.label;
+        btn.setAttribute('aria-label', preset.label);
+        btn.style.background = preset.value;
+        btn.addEventListener('click', () => onSelect(preset.value));
+        container.appendChild(btn);
+      });
+      Array.from(container.querySelectorAll('.color-btn')).forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.color === currentValue);
+      });
+    }
+
+    function updateTeacherColorSelection() {
+      Array.from(teacherColorPalette.querySelectorAll('.color-btn')).forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.color === teacherCurrentColor);
+      });
+    }
+
+    function updateTeacherToolButtons() {
+      teacherToolButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tool === teacherCurrentTool));
+    }
+
+    function updateAnnotationButtons() {
+      const student = currentStudent;
+      const hasUndo = Boolean(student) && student.annotationUndoStack.length > 0;
+      const hasRedo = Boolean(student) && student.annotationRedoStack.length > 0;
+      const hasContent = Boolean(student) && student.annotations.length > 0;
+      teacherUndoBtn.disabled = !hasUndo;
+      teacherRedoBtn.disabled = !hasRedo;
+      teacherClearBtn.disabled = !hasContent;
+    }
+
+    // Sort student cards alphanumerically (numbers before letters, then alphabetically)
+    function sortStudentCards() {
+      const query = (studentFilter?.value || '').trim().toLowerCase();
+      const cardsArray = Array.from(students.values())
+        .filter(s => {
+          const matchesQuery = !query || s.username.toLowerCase().includes(query);
+          const matchesFlag = !showFlaggedOnly || s.flagged;
+          return matchesQuery && matchesFlag;
+        })
+        .map(s => ({ username: s.username, card: s.card }))
+        .sort((a, b) => {
+          const nameA = a.username.toLowerCase();
+          const nameB = b.username.toLowerCase();
+          // Natural sort: handle numbers embedded in strings
+          return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+        });
+      
+      // Re-append cards in sorted order
+      // Clear grid and re-append filtered cards to avoid gaps
+      studentsGrid.innerHTML = '';
+      cardsArray.forEach(item => {
+        if (item.card && item.card.parentNode === studentsGrid) {
+          studentsGrid.appendChild(item.card);
+        } else if (item.card) {
+          studentsGrid.appendChild(item.card);
+        }
+      });
+    }
+
+    studentFilter?.addEventListener('input', sortStudentCards);
+    flagFilterBtn?.addEventListener('click', () => {
+      showFlaggedOnly = !showFlaggedOnly;
+      updateFlagFilterUI();
+      sortStudentCards();
+    });
+    modalFlagBtn?.addEventListener('click', () => {
+      if (!currentStudent) return;
+      currentStudent.flagged = !currentStudent.flagged;
+      updateFlagUI(currentStudent);
+      updateModalFlagUI(currentStudent);
+      if (showFlaggedOnly) {
+        sortStudentCards();
+      }
+    });
+
+    const FLAG_OFF_CLASSES = ['border-slate-300', 'bg-white/60', 'text-slate-600', 'hover:border-slate-400', 'hover:bg-white', 'hover:text-slate-800', 'focus:ring-emerald-200/60'];
+    const FLAG_ON_CLASSES = ['border-rose-500', 'bg-rose-500', 'text-white', 'hover:border-rose-600', 'hover:bg-rose-600', 'hover:text-white', 'focus:ring-rose-300/70'];
+    const FLAG_FILTER_OFF_CLASSES = ['border-slate-200', 'bg-white/70', 'text-slate-700', 'hover:bg-white', 'hover:border-slate-300', 'hover:text-slate-900', 'focus:ring-emerald-200', 'shadow-sm'];
+    const FLAG_FILTER_ON_CLASSES = ['border-rose-500', 'bg-rose-500/90', 'text-white', 'hover:bg-rose-600', 'hover:border-rose-600', 'focus:ring-rose-300/70', 'shadow'];
+    const MODAL_FLAG_OFF_CLASSES = ['border-slate-200', 'bg-white/80', 'text-slate-600', 'hover:border-rose-300', 'hover:bg-rose-50', 'focus:ring-emerald-200'];
+    const MODAL_FLAG_ON_CLASSES = ['border-rose-500', 'bg-rose-500', 'text-white', 'hover:border-rose-600', 'hover:bg-rose-600', 'focus:ring-rose-300/70'];
+
+    function updateFlagUI(student) {
+      const button = student?.flagBtn;
+      if (!button) return;
+      const flagged = !!student.flagged;
+      button.setAttribute('aria-pressed', flagged ? 'true' : 'false');
+      button.dataset.flagged = flagged ? 'true' : 'false';
+      button.title = flagged ? 'Remove flag' : 'Flag student';
+      FLAG_OFF_CLASSES.forEach(cls => button.classList.toggle(cls, !flagged));
+      FLAG_ON_CLASSES.forEach(cls => button.classList.toggle(cls, flagged));
+      button.classList.toggle('is-flagged', flagged);
+      student?.card?.classList.toggle('is-flagged', flagged);
+    }
+
+    function updateFlagFilterUI() {
+      if (!flagFilterBtn) return;
+      flagFilterBtn.setAttribute('aria-pressed', showFlaggedOnly ? 'true' : 'false');
+      FLAG_FILTER_OFF_CLASSES.forEach(cls => flagFilterBtn.classList.toggle(cls, !showFlaggedOnly));
+      FLAG_FILTER_ON_CLASSES.forEach(cls => flagFilterBtn.classList.toggle(cls, showFlaggedOnly));
+    }
+
+    function updateModalFlagUI(student) {
+      if (!modalFlagBtn) return;
+      const flagged = !!student?.flagged;
+      modalFlagBtn.setAttribute('aria-pressed', flagged ? 'true' : 'false');
+      modalFlagBtn.dataset.flagged = flagged ? 'true' : 'false';
+      const label = modalFlagBtn.querySelector('span');
+      if (label) label.textContent = flagged ? 'Flagged' : 'Flag';
+      MODAL_FLAG_OFF_CLASSES.forEach(cls => modalFlagBtn.classList.toggle(cls, !flagged));
+      MODAL_FLAG_ON_CLASSES.forEach(cls => modalFlagBtn.classList.toggle(cls, flagged));
+      modalFlagBtn.classList.toggle('is-flagged', flagged);
+    }
+
+    updateFlagFilterUI();
+
+    function ensureStudent(username) {
+      if (students.has(username)) return students.get(username);
+
+      emptyState.classList.add('hidden');
+
+      const baseCanvas = document.createElement('canvas');
+      baseCanvas.width = 800;
+      baseCanvas.height = 600;
+      const baseCtx = baseCanvas.getContext('2d', { alpha: false });
+      baseCtx.fillStyle = '#ffffff';
+      baseCtx.fillRect(0, 0, 800, 600);
+
+      const previewCanvas = document.createElement('canvas');
+      previewCanvas.width = 400;
+      previewCanvas.height = 300;
+      previewCanvas.className = 'absolute inset-0 h-full w-full';
+      const previewCtx = previewCanvas.getContext('2d');
+      previewCtx.fillStyle = '#ffffff';
+      previewCtx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+      const skeleton = document.createElement('div');
+      skeleton.className = 'skeleton';
+
+      const card = document.createElement('article');
+      card.className = 'glass-surface student-card flex flex-col gap-4 rounded-[24px] border border-slate-200 bg-white/85 p-5 shadow-[0_20px_55px_rgba(30,41,59,0.12)] backdrop-blur';
+      card.innerHTML = `
+        <div class="flex flex-col gap-1">
+          <h3 class="text-lg font-semibold text-slate-900 student-name break-words leading-tight">${username}</h3>
+          <div class="card-meta flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="last-seen text-xs font-semibold text-slate-700">—</span>
+              <span class="annotation-seen hidden text-[10px] font-bold uppercase tracking-wide text-emerald-600">Seen</span>
+              <button type="button" class="flag-toggle inline-flex h-5 w-5 items-center justify-center rounded-full border transition focus:outline-none focus:ring-2 focus:ring-emerald-200/60" aria-pressed="false" title="Flag student">
+                <span class="sr-only">Toggle flag</span>
+                <svg class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M6 3v14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"></path>
+                  <path d="M6.5 4.2h7.2l-2.2 3.3 2.2 3.3H6.5Z"></path>
+                </svg>
+              </button>
+            </div>
+            <span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.25)]" title="Live" aria-label="Live"></span>
+          </div>
+        </div>
+        <div class="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-inner" style="aspect-ratio:4/3;">
+          <canvas class="absolute inset-0 h-full w-full" width="400" height="300"></canvas>
+        </div>
+        <button type="button" data-action="open-canvas" class="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-200">Open canvas</button>
+      `;
+      const flagBtn = card.querySelector('.flag-toggle');
+      const previewElement = card.querySelector('canvas');
+      const openCanvasBtn = card.querySelector('[data-action="open-canvas"]');
+      previewElement.replaceWith(previewCanvas);
+      card.querySelector('.relative').appendChild(skeleton);
+      studentsGrid.appendChild(card);
+
+      const student = {
+        username,
+        strokes: [],
+        canvas: baseCanvas,
+        ctx: baseCtx,
+        previewCanvas,
+        previewCtx,
+        card,
+        lastSeenEl: card.querySelector('.last-seen'),
+        lastSeen: Date.now(),
+        annotations: [],
+        annotationUndoStack: [],
+        annotationRedoStack: [],
+        eraseBatch: null,
+        flagBtn,
+        flagged: false
+      };
+      students.set(username, student);
+      studentCountEl.textContent = students.size;
+
+      openCanvasBtn?.addEventListener('click', () => openModalForStudent(student));
+      flagBtn?.addEventListener('click', () => {
+        student.flagged = !student.flagged;
+        updateFlagUI(student);
+        if (currentStudent === student) {
+          updateModalFlagUI(student);
+        }
+        if (showFlaggedOnly) {
+          sortStudentCards();
+        }
+      });
+      updateFlagUI(student);
+
+      const io = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            renderStudent(student);
+            skeleton.remove();
+            io.disconnect();
+          }
+        });
+      }, { rootMargin: '100px' });
+      io.observe(card);
+      
+      // Sort cards after adding new student
+      sortStudentCards();
+      
+      return student;
+    }
+
+    // Preserve original names and toggle masking with asterisks
+    const nameOriginalMap = new WeakMap();
+    function maskName(name){ return name.replace(/\S/g,'*'); }
+    function updateNameVisibility(){
+      const hide = !!hideNamesToggle?.checked;
+      document.querySelectorAll('.student-name').forEach(el=>{
+        if(!nameOriginalMap.has(el)) nameOriginalMap.set(el, el.textContent || '');
+        const original = nameOriginalMap.get(el) || '';
+        el.textContent = hide ? maskName(original) : original;
+        el.classList.toggle('opacity-50', hide);
+      });
+    }
+    // Initialize once UI is built
+    setTimeout(updateNameVisibility, 0);
+    hideNamesToggle?.addEventListener('change', updateNameVisibility);
+
+    // Grid columns control
+    function updateGridColumns() {
+      const val = gridColumnsSelect.value;
+      try { localStorage.setItem('grid_cols', val); } catch {}
+      if(val === 'auto'){
+        // compute based on width with a min card size
+        const minCard = 360;
+        const avail = studentsGrid.clientWidth || 1080;
+        const cols = Math.max(1, Math.floor(avail / minCard));
+        studentsGrid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+        if(gridColumnsValue) gridColumnsValue.textContent = 'Auto';
+        return;
+      }
+      const cols = parseInt(val, 10) || 3;
+      studentsGrid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+      if(gridColumnsValue) gridColumnsValue.textContent = String(cols);
+    }
+    // Initialize from saved preference
+    (function(){
+      try { const saved = localStorage.getItem('grid_cols'); if(saved){ gridColumnsSelect.value = saved; } } catch {}
+      updateGridColumns();
+      window.addEventListener('resize', () => { if(gridColumnsSelect.value==='auto') updateGridColumns(); });
+    })();
+    gridColumnsSelect?.addEventListener('change', () => { updateGridColumns(); });
+    gridColumnsWrap?.addEventListener('click', () => { gridColumnsSelect?.focus(); gridColumnsSelect?.click(); });
+
+    function getActiveStrokeMap(username) {
+      if (!activeRemoteStrokes.has(username)) {
+        activeRemoteStrokes.set(username, new Map());
+      }
+      return activeRemoteStrokes.get(username);
+    }
+
+    function renderStudent(student) {
+      const ctx = student.ctx;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 800, 600);
+      student.strokes.forEach(stroke => drawSmoothStrokePath(ctx, stroke.points, stroke.color, stroke.size));
+      const active = activeRemoteStrokes.get(student.username);
+      if (active) {
+        active.forEach(stroke => drawSmoothStrokePath(ctx, stroke.points, stroke.color, stroke.size));
+      }
+
+      student.previewCtx.clearRect(0, 0, student.previewCanvas.width, student.previewCanvas.height);
+      // Letterbox-fit coordinates onto preview; draw everything procedurally (template + strokes),
+      // so the template stays behind strokes
+      const dstW = student.previewCanvas.width;
+      const dstH = student.previewCanvas.height;
+      const srcW = 800, srcH = 600;
+      const scale = Math.min(dstW / srcW, dstH / srcH);
+      const drawW = srcW * scale;
+      const drawH = srcH * scale;
+      const dx = Math.round((dstW - drawW) / 2);
+      const dy = Math.round((dstH - drawH) / 2);
+      student.previewCtx.save();
+      student.previewCtx.translate(dx, dy);
+      student.previewCtx.scale(scale, scale);
+      // Draw template first (behind strokes)
+      if (templateImage && templateImage.naturalWidth) {
+        const tScale = Math.min(800 / templateImage.naturalWidth, 600 / templateImage.naturalHeight) * templateFit;
+        const tw = templateImage.naturalWidth * tScale;
+        const th = templateImage.naturalHeight * tScale;
+        const tx = (800 - tw) / 2;
+        const ty = (600 - th) / 2;
+        student.previewCtx.drawImage(templateImage, tx, ty, tw, th);
+      }
+      // Draw student strokes (same order as base canvas)
+      student.strokes.forEach(stroke => drawSmoothStrokePath(student.previewCtx, stroke.points, stroke.color, stroke.size));
+      // Draw any in-progress active remote strokes
+      const activePreview = activeRemoteStrokes.get(student.username);
+      if (activePreview) {
+        activePreview.forEach(stroke => drawSmoothStrokePath(student.previewCtx, stroke.points, stroke.color, stroke.size));
+      }
+      // Draw teacher annotations committed for this student
+      (student.annotations || []).forEach(stroke => drawSmoothStrokePath(student.previewCtx, stroke.points, stroke.color, stroke.size));
+      student.previewCtx.restore();
+      // draw border in preview to match student
+      student.previewCtx.save();
+      student.previewCtx.strokeStyle = '#cbd5e1';
+      student.previewCtx.lineWidth = 1;
+      student.previewCtx.strokeRect(dx + 0.5, dy + 0.5, drawW - 1, drawH - 1);
+      student.previewCtx.restore();
+
+      if (currentStudent && currentStudent.username === student.username) {
+        // Recompose modal canvas procedurally, do not paste student.canvas bitmap
+        bigCtx.fillStyle = '#ffffff';
+        bigCtx.fillRect(0, 0, bigCanvas.width, bigCanvas.height);
+        drawTemplateIfAny(bigCtx); // template first
+        // Draw a subtle border indicating exact drawable area (800x600 mapped 1:1)
+        bigCtx.save();
+        bigCtx.strokeStyle = '#cbd5e1';
+        bigCtx.lineWidth = 2;
+        bigCtx.strokeRect(0.5, 0.5, 799, 599);
+        bigCtx.restore();
+        // Draw student's base strokes (without annotations) directly
+        student.strokes.forEach(stroke => drawSmoothStrokePath(bigCtx, stroke.points, stroke.color, stroke.size));
+        redrawAnnotationOverlay(activeAnnotationStroke?.points || null);
+      }
+    }
+
+    function openModalForStudent(student) {
+      currentStudent = student;
+      modalTitle.textContent = `Annotating ${student.username}`;
+      // Use the same renderer so the template is shown consistently
+      renderStudent(student);
+      updateAnnotationButtons();
+      modal.classList.remove('invisible', 'pointer-events-none');
+      modal.classList.add('pointer-events-auto');
+      updateTeacherColorSelection();
+      updateTeacherToolButtons();
+      updateModalFlagUI(student);
+    }
+
+    function closeModalView() {
+      modal.classList.add('invisible', 'pointer-events-none');
+      modal.classList.remove('pointer-events-auto');
+      currentStudent = null;
+      annotationPointerId = null;
+      activeAnnotationStroke = null;
+      teacherErasing = false;
+      teacherLastErasePoint = null;
+      erasedAnnotationIds.clear();
+      overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+      updateAnnotationButtons();
+    }
+
+    closeModal.addEventListener('click', closeModalView);
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) closeModalView();
+    });
+
+    renderColorPalette(teacherColorPalette, (color) => {
+      teacherCurrentColor = color;
+      updateTeacherColorSelection();
+      saveTeacherPrefs({ color: teacherCurrentColor, tool: teacherCurrentTool, brush: teacherBrush, stylusOnly: teacherStylusOnly, toolbarOnLeft: teacherToolbarOnLeft });
+      if (teacherCurrentTool === 'eraser') {
+        teacherCurrentTool = 'pen';
+        updateTeacherToolButtons();
+      }
+    }, teacherCurrentColor);
+
+    // Tool buttons - set up event listeners and apply loaded state
+    teacherToolButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        teacherCurrentTool = btn.dataset.tool;
+        
+        updateTeacherToolButtons();
+        saveTeacherPrefs({ color: teacherCurrentColor, tool: teacherCurrentTool, brush: teacherBrush, stylusOnly: teacherStylusOnly, toolbarOnLeft: teacherToolbarOnLeft });
+      });
+    });
+    
+    updateTeacherToolButtons(); // Apply loaded tool state
+
+    // Color palette - apply loaded color
+    
+    updateTeacherColorSelection(); // Apply loaded color state
+
+    // Brush size - apply loaded size and set up listener
+    teacherBrushSize.value = teacherBrush;
+    teacherSizeDisplay.textContent = teacherBrush;
+    
+    teacherBrushSize.addEventListener('input', (e) => {
+      teacherBrush = parseInt(e.target.value, 10);
+      teacherSizeDisplay.textContent = teacherBrush;
+      
+      saveTeacherPrefs({ color: teacherCurrentColor, tool: teacherCurrentTool, brush: teacherBrush, stylusOnly: teacherStylusOnly, toolbarOnLeft: teacherToolbarOnLeft });
+    });
+
+    // Stylus toggle - apply loaded state and set up listener
+    teacherStylusToggle.classList.toggle('off', !teacherStylusOnly);
+    teacherStylusToggle.textContent = teacherStylusOnly ? 'Stylus mode (pen only)' : 'All inputs';
+    
+    teacherStylusToggle.addEventListener('click', () => {
+      teacherStylusOnly = !teacherStylusOnly;
+      teacherStylusToggle.classList.toggle('off', !teacherStylusOnly);
+      teacherStylusToggle.textContent = teacherStylusOnly ? 'Stylus mode (pen only)' : 'All inputs';
+      
+      saveTeacherPrefs({ color: teacherCurrentColor, tool: teacherCurrentTool, brush: teacherBrush, stylusOnly: teacherStylusOnly, toolbarOnLeft: teacherToolbarOnLeft });
+    });
+
+    // Toolbar position - apply loaded state and set up listener
+    function updateTeacherToolbarPosition() {
+      if (teacherToolbarOnLeft) {
+        teacherWorkspace.classList.remove('flex-row-reverse');
+        swapTeacherToolbarBtn.textContent = 'Move toolbar to right';
+        swapTeacherToolbarBtn.setAttribute('aria-pressed', 'false');
+      } else {
+        teacherWorkspace.classList.add('flex-row-reverse');
+        swapTeacherToolbarBtn.textContent = 'Move toolbar to left';
+        swapTeacherToolbarBtn.setAttribute('aria-pressed', 'true');
+      }
+      
+    }
+    swapTeacherToolbarBtn.addEventListener('click', () => {
+      teacherToolbarOnLeft = !teacherToolbarOnLeft;
+      
+      updateTeacherToolbarPosition();
+      saveTeacherPrefs({ color: teacherCurrentColor, tool: teacherCurrentTool, brush: teacherBrush, stylusOnly: teacherStylusOnly, toolbarOnLeft: teacherToolbarOnLeft });
+    });
+    updateTeacherToolbarPosition(); // Apply loaded toolbar position
+
+    function redrawAnnotationOverlay(activePoints = null) {
+      overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+      if (!currentStudent) return;
+      currentStudent.annotations.forEach(stroke => {
+        if (stroke) drawSmoothStrokePath(overlayCtx, stroke.points, stroke.color, stroke.size);
+      });
+      if (activePoints?.length && activeAnnotationStroke) {
+        drawSmoothStrokePath(overlayCtx, activePoints, activeAnnotationStroke.color, activeAnnotationStroke.size);
+      }
+    }
+
+    function markAnnotated(student){
+      try {
+        const seenText = student?.card?.querySelector('.annotation-seen');
+        if(seenText){ seenText.classList.remove('hidden'); }
+      } catch {}
+    }
+
+    function getOverlayPoint(ev) {
+      const rect = overlay.getBoundingClientRect();
+      return { x: ((ev.clientX - rect.left) * overlay.width) / rect.width, y: ((ev.clientY - rect.top) * overlay.height) / rect.height };
+    }
+
+    function getOverlaySamples(ev) {
+      const list = ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev];
+      return list.map(item => getOverlayPoint(item));
+    }
+
+    function beginAnnotationStroke(point) {
+      activeAnnotationStroke = {
+        id: `${Date.now()}-teacher-${Math.random().toString(16).slice(2)}`,
+        color: teacherCurrentColor,
+        size: teacherBrush,
+        points: [point]
+      };
+      redrawAnnotationOverlay(activeAnnotationStroke.points);
+    }
+
+    function commitAnnotationStroke(stroke) {
+      if (!currentStudent || !stroke.points?.length) return;
+      const student = currentStudent;
+      const committed = {
+        id: stroke.id,
+        color: stroke.color,
+        size: stroke.size,
+        points: stroke.points.map(p => ({ x: p.x, y: p.y })),
+        isTeacher: true
+      };
+      student.annotations.push(committed);
+      student.annotationUndoStack.push({ type: 'draw', path: committed });
+      student.annotationRedoStack.length = 0;
+      redrawAnnotationOverlay();
+      updateAnnotationButtons();
+  renderStudent(student);
+  channel?.send({ type: 'broadcast', event: 'teacher_stroke_end', payload: { target: student.username, stroke: committed } });
+  markAnnotated(student);
+    }
+
+    function beginTeacherErase(point) {
+      if (!currentStudent) return;
+      teacherErasing = true;
+      erasedAnnotationIds.clear();
+      currentStudent.eraseBatch = [];
+      teacherLastErasePoint = point;
+      deleteAnnotationsAt(point.x, point.y);
+    }
+
+    function continueTeacherErase(ev) {
+      if (!teacherErasing || !currentStudent) return;
+      const list = ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev];
+      for (const ce of list) {
+        const point = getOverlayPoint(ce);
+        if (teacherLastErasePoint) {
+          const dx = point.x - teacherLastErasePoint.x;
+          const dy = point.y - teacherLastErasePoint.y;
+          const dist = Math.hypot(dx, dy);
+          const steps = Math.max(1, Math.floor(dist / 8));
+          for (let i = 1; i <= steps; i++) {
+            const t = i / steps;
+            deleteAnnotationsAt(
+              teacherLastErasePoint.x + dx * t,
+              teacherLastErasePoint.y + dy * t
+            );
+          }
+        } else {
+          deleteAnnotationsAt(point.x, point.y);
+        }
+        teacherLastErasePoint = point;
+      }
+    }
+
+    function endTeacherErase() {
+      if (!currentStudent) return;
+      const batch = currentStudent.eraseBatch || [];
+      if (batch.length) {
+        currentStudent.annotationUndoStack.push({ type: 'erase', entries: batch });
+        currentStudent.annotationRedoStack.length = 0;
+        updateAnnotationButtons();
+      }
+      currentStudent.eraseBatch = null;
+      teacherErasing = false;
+      teacherLastErasePoint = null;
+      erasedAnnotationIds.clear();
+    }
+
+    function deleteAnnotationsAt(x, y) {
+      if (!currentStudent) return;
+      const student = currentStudent;
+      const radius = Math.max(28, teacherBrush * 3);
+      let removed = false;
+      for (let i = student.annotations.length - 1; i >= 0; i--) {
+        const stroke = student.annotations[i];
+        // Teacher can only erase teacher annotations; ignore student strokes list here
+        if (!stroke || erasedAnnotationIds.has(stroke.id)) continue;
+        const hit = stroke.points.some((p, idx) => {
+          const dist = Math.hypot(p.x - x, p.y - y);
+          if (dist <= radius + (stroke.size || 3) / 2) return true;
+          if (idx > 0) {
+            const prev = stroke.points[idx - 1];
+            const d2 = distToSegmentSquared(x, y, prev.x, prev.y, p.x, p.y);
+            return d2 <= (radius + (stroke.size || 3) / 2) ** 2;
+          }
+          return false;
+        });
+        if (hit) {
+          const [removedStroke] = student.annotations.splice(i, 1);
+          if (!student.eraseBatch) student.eraseBatch = [];
+          student.eraseBatch.push({ path: removedStroke, index: i });
+          erasedAnnotationIds.add(removedStroke.id);
+          removed = true;
+          channel?.send({ type: 'broadcast', event: 'teacher_stroke_delete', payload: { target: student.username, strokeId: removedStroke.id } });
+        }
+      }
+      if (removed) {
+        redrawAnnotationOverlay(activeAnnotationStroke?.points || null);
+        renderStudent(student);
+      }
+    }
+
+    let annotationDrawing = false;
+    
+    function startAnnotation(e) {
+      if (!currentStudent) return;
+      if (!supportedPointer(e)) return;
+      e.preventDefault();
+      annotationPointerId = e.pointerId ?? null;
+      annotationDrawing = true;
+      if (annotationPointerId != null) {
+        try { overlay.setPointerCapture(annotationPointerId); } catch {}
+      }
+      const point = getOverlayPoint(e);
+      
+      if (teacherCurrentTool === 'eraser') {
+        beginTeacherErase(point);
+        return;
+      }
+      
+      beginAnnotationStroke(point);
+    }
+
+    function moveAnnotation(e) {
+      if (!annotationDrawing) return;
+      if (annotationPointerId != null && e.pointerId != null && e.pointerId !== annotationPointerId) return;
+      if (!supportedPointer(e)) return;
+      e.preventDefault();
+      // Do not draw if primary button is not pressed (prevents trailing lines after a click)
+      const t = (e.pointerType || '').toLowerCase();
+      if ((t === 'mouse' && e.buttons === 0) || (t === 'pen' && (e.pressure === 0 || e.buttons === 0))) {
+        return;
+      }
+      const point = getOverlayPoint(e);
+      
+      if (teacherCurrentTool === 'eraser') {
+        continueTeacherErase(e);
+        return;
+      }
+      
+      if (!activeAnnotationStroke) return;
+      activeAnnotationStroke.points.push(point);
+      redrawAnnotationOverlay(activeAnnotationStroke.points);
+    }
+
+    function endAnnotation(e) {
+      if (!annotationDrawing) return;
+      if (annotationPointerId != null && e.pointerId != null && e.pointerId !== annotationPointerId) return;
+      e.preventDefault();
+      if (annotationPointerId != null) {
+        try { overlay.releasePointerCapture(annotationPointerId); } catch {}
+      }
+      
+      if (teacherCurrentTool === 'eraser') {
+        endTeacherErase();
+        teacherErasing = false;
+        annotationDrawing = false;
+        annotationPointerId = null;
+        return;
+      }
+      
+      if (activeAnnotationStroke) {
+        commitAnnotationStroke(activeAnnotationStroke);
+      }
+      activeAnnotationStroke = null;
+      annotationDrawing = false;
+      annotationPointerId = null;
+    }
+    
+    function cancelAnnotation(e) {
+      if (!annotationDrawing) return;
+      if (annotationPointerId != null && e.pointerId != null && e.pointerId !== annotationPointerId) return;
+      e.preventDefault();
+      if (annotationPointerId != null) {
+        try { overlay.releasePointerCapture(annotationPointerId); } catch {}
+      }
+      
+      if (teacherCurrentTool === 'eraser') {
+        endTeacherErase();
+        teacherErasing = false;
+      } else if (activeAnnotationStroke) {
+        activeAnnotationStroke = null;
+        redrawAnnotationOverlay();
+      }
+      
+      annotationDrawing = false;
+      annotationPointerId = null;
+    }
+
+    overlay.addEventListener('pointerdown', startAnnotation, { passive: false });
+    overlay.addEventListener('pointermove', moveAnnotation, { passive: false });
+    overlay.addEventListener('pointerup', endAnnotation, { passive: false });
+    overlay.addEventListener('pointercancel', cancelAnnotation, { passive: false });
+    overlay.addEventListener('pointerleave', cancelAnnotation, { passive: false });
+
+    // Prevent iPad gestures interfering with drawing
+    ['touchstart', 'touchmove', 'gesturestart'].forEach(ev => {
+      overlay.addEventListener(ev, e => { e.preventDefault(); }, { passive: false });
+    });
+
+    function cloneAnnotationPaths(arr) {
+      return arr.map(p => ({
+        id: p.id,
+        color: p.color,
+        size: p.size,
+        isTeacher: p.isTeacher,
+        points: p.points.map(q => ({ x: q.x, y: q.y }))
+      }));
+    }
+
+    teacherUndoBtn.addEventListener('click', () => {
+      if (!currentStudent || !currentStudent.annotationUndoStack.length) return;
+      const action = currentStudent.annotationUndoStack.pop();
+
+      if (action.type === 'draw') {
+        const path = action.path;
+        let idx = currentStudent.annotations.lastIndexOf(path);
+        if (idx === -1 && path?.id) {
+          idx = currentStudent.annotations.findIndex(s => s.id === path.id);
+        }
+        if (idx !== -1) {
+          currentStudent.annotations.splice(idx, 1);
+          currentStudent.annotationRedoStack.push({ type: 'draw', path });
+        }
+        channel?.send({ type: 'broadcast', event: 'teacher_state_change', payload: { target: currentStudent.username, removed: [path.id] } });
+      }
+
+      else if (action.type === 'erase') {
+        const entries = action.entries || [];
+        for (let i = entries.length - 1; i >= 0; i--) {
+          const { path, index } = entries[i];
+          const insertAt = Number.isFinite(index) ? Math.min(index, currentStudent.annotations.length) : currentStudent.annotations.length;
+          currentStudent.annotations.splice(insertAt, 0, path);
+        }
+        currentStudent.annotationRedoStack.push({ type: 'erase', entries });
+        const added = entries.map(e => ({ ...e.path, points: e.path.points.map(p => ({ x: p.x, y: p.y })) }));
+        channel?.send({ type: 'broadcast', event: 'teacher_state_change', payload: { target: currentStudent.username, added } });
+      }
+
+      else if (action.type === 'clear') {
+        const prev = action.prev || [];
+        currentStudent.annotationRedoStack.push({ type: 'clear', prev: cloneAnnotationPaths(currentStudent.annotations) });
+        currentStudent.annotations = cloneAnnotationPaths(prev);
+        const added = prev.map(p => ({ ...p, points: p.points.map(pt => ({ x: pt.x, y: pt.y })) }));
+        channel?.send({ type: 'broadcast', event: 'teacher_state_change', payload: { target: currentStudent.username, added } });
+      }
+
+      redrawAnnotationOverlay();
+      updateAnnotationButtons();
+      renderStudent(currentStudent);
+    });
+
+    teacherRedoBtn.addEventListener('click', () => {
+      if (!currentStudent || !currentStudent.annotationRedoStack.length) return;
+      const action = currentStudent.annotationRedoStack.pop();
+
+      if (action.type === 'draw') {
+        const path = action.path;
+        currentStudent.annotations.push(path);
+        currentStudent.annotationUndoStack.push({ type: 'draw', path });
+        channel?.send({ type: 'broadcast', event: 'teacher_stroke_end', payload: { target: currentStudent.username, stroke: { ...path, points: path.points.map(p => ({ x: p.x, y: p.y })) } } });
+        markAnnotated(currentStudent);
+      }
+
+      else if (action.type === 'erase') {
+        const performed = [];
+        (action.entries || []).forEach(({ path, index }) => {
+          let idx = currentStudent.annotations.indexOf(path);
+          if (idx === -1 && path?.id) {
+            idx = currentStudent.annotations.findIndex(s => s.id === path.id);
+          }
+          if (idx !== -1) {
+            currentStudent.annotations.splice(idx, 1);
+            performed.push({ path, index: idx });
+          } else if (Number.isFinite(index) && index >= 0 && index < currentStudent.annotations.length) {
+            const [removed] = currentStudent.annotations.splice(index, 1);
+            if (removed) performed.push({ path: removed, index });
+          }
+        });
+        currentStudent.annotationUndoStack.push({ type: 'erase', entries: performed });
+        const removed = performed.map(e => e.path.id);
+        channel?.send({ type: 'broadcast', event: 'teacher_state_change', payload: { target: currentStudent.username, removed } });
+      }
+
+      else if (action.type === 'clear') {
+        const snapshot = cloneAnnotationPaths(currentStudent.annotations);
+        currentStudent.annotations = [];
+        currentStudent.annotationUndoStack.push({ type: 'clear', prev: snapshot });
+        channel?.send({ type: 'broadcast', event: 'teacher_clear', payload: { target: currentStudent.username } });
+      }
+
+      redrawAnnotationOverlay();
+      updateAnnotationButtons();
+      renderStudent(currentStudent);
+    });
+
+    teacherClearBtn.addEventListener('click', () => {
+      if (!currentStudent || !currentStudent.annotations.length) return;
+      const snapshot = cloneAnnotationPaths(currentStudent.annotations);
+      currentStudent.annotations = [];
+      currentStudent.annotationUndoStack.push({ type: 'clear', prev: snapshot });
+      currentStudent.annotationRedoStack.length = 0;
+      redrawAnnotationOverlay();
+      updateAnnotationButtons();
+      renderStudent(currentStudent);
+      channel?.send({ type: 'broadcast', event: 'teacher_clear', payload: { target: currentStudent.username } });
+    });
+
+    function addStudentStroke(username, stroke) {
+      const student = ensureStudent(username);
+      if (!stroke?.id || !stroke.points?.length) return;
+      if (student.strokes.some(s => s.id === stroke.id)) return;
+      student.strokes.push({ id: stroke.id, color: stroke.color || '#111827', size: stroke.size || 3, points: stroke.points.map(p => ({ x: p.x, y: p.y })), isTeacher: false });
+      renderStudent(student);
+    }
+
+    function removeStudentStroke(username, strokeId) {
+      const student = students.get(username);
+      if (!student) return;
+      const idx = student.strokes.findIndex(s => s.id === strokeId);
+      if (idx >= 0) {
+        student.strokes.splice(idx, 1);
+        renderStudent(student);
+      }
+      const activeMap = activeRemoteStrokes.get(username);
+      activeMap?.delete(strokeId);
+    }
+
+    function applyStudentStateChange(username, payload) {
+      const student = ensureStudent(username);
+      (payload.added || []).forEach(stroke => {
+        if (!student.strokes.some(s => s.id === stroke.id)) {
+          student.strokes.push({ id: stroke.id, color: stroke.color || '#111827', size: stroke.size || 3, points: (stroke.points || []).map(p => ({ x: p.x, y: p.y })), isTeacher: false });
+        }
+      });
+      (payload.removed || []).forEach(id => {
+        const idx = student.strokes.findIndex(s => s.id === id);
+        if (idx >= 0) student.strokes.splice(idx, 1);
+        const activeMap = activeRemoteStrokes.get(username);
+        activeMap?.delete(id);
+      });
+      renderStudent(student);
+    }
+
+    function handleStudentClear(username) {
+      const student = students.get(username);
+      if (!student) return;
+      student.strokes = [];
+      renderStudent(student);
+      activeRemoteStrokes.delete(username);
+    }
+
+    startSessionBtn.addEventListener('click', startSession);
+
+    // Copy URL button with toast
+    copyUrlBtn?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(joinUrlInput.value);
+        showToast('Join URL copied to clipboard!', 'success');
+      } catch {
+        showToast('Failed to copy URL', 'warn');
+      }
+    });
+
+    function startSession() {
+      if (channel) return;
+      sessionCode = sessionInput.value.trim().toUpperCase();
+      if (!sessionCode) {
+        alert('Enter a session code to start.');
+        return;
+      }
+      supabaseClient = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+      channel = supabaseClient.channel(`minimal-${sessionCode}`, { config: { broadcast: { ack: false } } });
+
+      // Remove auto end-session on hide; handle in beforeunload confirmation only
+
+      channel.on('broadcast', { event: 'student_ready' }, ({ payload }) => {
+        if (!payload?.username) return;
+        if(!isValidEnvelope(payload.env)) return;
+        if(!acceptSeq(payload.username, payload.env)) return;
+        const student = ensureStudent(payload.username);
+        // Push the current LIVE template (not staged) to newcomers
+        if(templateImage && liveTemplate && liveTemplate.kind && liveTemplate.src){
+          try { channel.send({ type:'broadcast', event:'teacher_template', payload:{ target: payload.username, kind: liveTemplate.kind, src: liveTemplate.src } }); } catch {}
+        }
+      });
+
+      // Student requests a fresh snapshot
+      channel.on('broadcast', { event: 'student_sync_request' }, ({ payload }) => {
+        const uname = payload?.username; if(!uname) return;
+        try {
+          const s = students.get(uname) || ensureStudent(uname);
+          const snapshot = (s.strokes || []).map(p=>({ id:p.id, color:p.color, size:p.size, points:p.points }));
+          channel.send({ type:'broadcast', event:'teacher_snapshot', payload:{ target: uname, strokes: snapshot, template: (liveTemplate||null) } });
+        } catch {}
+      });
+
+      channel.on('broadcast', { event: 'teacher_presence_check' }, ({ payload }) => {
+        if (!payload) return;
+        if (!isValidEnvelope(payload.env)) return;
+        const probeId = payload.probeId;
+        if (!probeId) return;
+        try {
+          channel.send({ type:'broadcast', event:'teacher_presence_ack', payload:{ probeId, env:{ v:1, s: sessionCode, seq: Date.now() } } });
+        } catch (err) {
+          console.error('[TEACHER] Failed to send presence ack:', err);
+        }
+      });
+
+      // Remove student on explicit leave notification
+      channel.on('broadcast', { event: 'student_leaving' }, ({ payload }) => {
+        const uname = payload?.username;
+        if (!uname) return;
+        const s = students.get(uname);
+        if (!s) return;
+        students.delete(uname);
+        // Remove card from grid if present
+        try { s.card?.remove?.(); } catch {}
+        // Reset currentStudent if needed
+        if (currentStudent && currentStudent.username === uname) {
+          currentStudent = null;
+        }
+        // Update count and empty state
+        try { studentCountEl.textContent = students.size; } catch {}
+        if (students.size === 0) {
+          emptyState.classList.remove('hidden');
+        }
+        // Notify teacher via toast
+        try { showToast(`${uname} left`, 'warn'); } catch {}
+      });
+
+      // When teacher_clear_all is broadcast (including by us), clear local views
+      channel.on('broadcast', { event: 'teacher_clear_all' }, () => {
+        templateImage = null;
+        activeAnnotationStroke = null;
+        // Clear all cached student strokes and annotations locally
+        const hadFlagFilter = showFlaggedOnly;
+        students.forEach(st => {
+          st.strokes = [];
+          st.annotations = [];
+          st.annotationUndoStack = [];
+          st.annotationRedoStack = [];
+          if (st.flagged) {
+            st.flagged = false;
+            updateFlagUI(st);
+            if (currentStudent === st) {
+              updateModalFlagUI(st);
+            }
+          }
+        });
+        // Reset any active stroke buffers
+        activeRemoteStrokes.clear();
+        try{ students.forEach(st => renderStudent(st)); }catch{}
+        // Clear modal overlay if open
+        try{ overlayCtx.clearRect(0,0,overlay.width, overlay.height); }catch{}
+        if(nextPrevCtx){ nextPrevCtx.fillStyle='#fff'; nextPrevCtx.fillRect(0,0,nextPreview.width,nextPreview.height); }
+        if (hadFlagFilter) {
+          showFlaggedOnly = false;
+          updateFlagFilterUI();
+        }
+        sortStudentCards();
+      });
+
+      channel.on('broadcast', { event: 'student_stroke_start' }, ({ payload }) => {
+        if(!isValidEnvelope(payload.env)) return;
+        if(!acceptSeq(payload.username, payload.env)) return;
+        if (!payload?.username || !payload.stroke?.id) return;
+        const student = ensureStudent(payload.username);
+        const activeMap = getActiveStrokeMap(payload.username);
+        activeMap.set(payload.stroke.id, { id: payload.stroke.id, color: payload.stroke.color || '#111827', size: payload.stroke.size || 3, points: [] });
+        // activity pulse
+        try { student.card.classList.add('card-hot'); setTimeout(()=> student.card.classList.remove('card-hot'), 3000); } catch {}
+        // update last seen timestamp UI
+        try { student.lastSeen = Date.now(); if(student.lastSeenEl){ student.lastSeenEl.textContent = new Date(student.lastSeen).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }); } } catch {}
+        renderStudent(student);
+      });
+
+      channel.on('broadcast', { event: 'student_stroke_point' }, ({ payload }) => {
+        if(!isValidEnvelope(payload.env)) return;
+        if(!acceptSeq(payload.username, payload.env)) return;
+        if (!payload?.username || !payload.strokeId) return;
+        const activeMap = getActiveStrokeMap(payload.username);
+        const stroke = activeMap.get(payload.strokeId);
+        if (!stroke) return;
+        appendPointWithInterpolation(stroke.points, { x: payload.x, y: payload.y });
+        const student = ensureStudent(payload.username);
+        try { student.card.classList.add('card-hot'); setTimeout(()=> student.card.classList.remove('card-hot'), 3000); } catch {}
+        try { student.lastSeen = Date.now(); if(student.lastSeenEl){ student.lastSeenEl.textContent = new Date(student.lastSeen).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }); } } catch {}
+        scheduleRenderStudent(student);
+      });
+
+      channel.on('broadcast', { event: 'student_stroke_end' }, ({ payload }) => {
+        if(!isValidEnvelope(payload.env)) return;
+        if(!acceptSeq(payload.username, payload.env)) return;
+        if (!payload?.username || !payload.stroke) return;
+        const activeMap = getActiveStrokeMap(payload.username);
+        activeMap.delete(payload.stroke.id);
+        addStudentStroke(payload.username, payload.stroke);
+        try { const s = students.get(payload.username); if(s){ s.card.classList.add('card-hot'); setTimeout(()=> s.card.classList.remove('card-hot'), 3000); s.lastSeen = Date.now(); if(s.lastSeenEl){ s.lastSeenEl.textContent = new Date(s.lastSeen).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }); } } } catch {}
+      });
+
+      channel.on('broadcast', { event: 'student_state_change' }, ({ payload }) => {
+        if(!isValidEnvelope(payload.env)) return;
+        if(!acceptSeq(payload.username, payload.env)) return;
+        if (!payload?.username) return;
+        applyStudentStateChange(payload.username, payload);
+      });
+
+      channel.on('broadcast', { event: 'student_stroke_delete' }, ({ payload }) => {
+        if(!isValidEnvelope(payload.env)) return;
+        if(!acceptSeq(payload.username, payload.env)) return;
+        if (!payload?.username || !payload.strokeId) return;
+        removeStudentStroke(payload.username, payload.strokeId);
+      });
+
+      channel.on('broadcast', { event: 'student_clear' }, ({ payload }) => {
+        if(!isValidEnvelope(payload.env)) return;
+        if(!acceptSeq(payload.username, payload.env)) return;
+        if (!payload?.username) return;
+        handleStudentClear(payload.username);
+      });
+
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setStatus('connected', 'Connected');
+          hideReconnectBar();
+          sessionInfo.classList.remove('hidden');
+          questionPanel.classList.remove('hidden');
+          sessionCodeEl.textContent = sessionCode;
+          channel.send({ type: 'broadcast', event: 'teacher_ready', payload: { sessionCode } });
+        } else if (status === 'CHANNEL_ERROR') {
+          setStatus('error', 'Connection error');
+          showReconnectBar();
+          // Auto-retry after 3s
+          setTimeout(() => {
+            if (channel) {
+              channel.subscribe().catch(() => {});
+            }
+          }, 3000);
+        } else if (status === 'CLOSED') {
+          showReconnectBar();
+        }
+      });
+
+      startSessionBtn.disabled = true;
+      startSessionBtn.textContent = 'Session live';
+      setStatus('connecting', 'Connecting…');
+      
+      // Only kick students if page is actually unloading (not just showing confirmation)
+      window.addEventListener('pagehide', (event) => {
+        if (isLeavingPage || event.persisted === false) {
+          broadcastSessionEnd();
+        }
+      });
+
+      window.addEventListener('unload', () => {
+        if (isLeavingPage) broadcastSessionEnd();
+      });
+
+      // Wire template buttons after channel is live
+      function rerenderAllStudents(){
+        try{ students.forEach(st => renderStudent(st)); }catch{}
+        if(currentStudent){ try{ renderStudent(currentStudent);}catch{} }
+      }
+
+      let liveTemplate = null; // { kind, src }
+
+      function sendTemplate(kind, src){
+        if(!channel) return;
+        // Broadcast to students
+        channel.send({ type:'broadcast', event:'teacher_template', payload:{ kind, src } });
+        // Set as current LIVE template (used for newcomers)
+        liveTemplate = kind==='clear' ? null : { kind, src };
+        // Reflect in teacher view
+        if(kind==='clear'){ templateImage=null; rerenderAllStudents(); return; }
+        const img = new Image();
+        img.onload = () => { templateImage = img; rerenderAllStudents(); };
+        img.crossOrigin = 'anonymous';
+        img.src = src;
+      }
+      function svgDataUri(str){ return `data:image/svg+xml,${encodeURIComponent(str)}`; }
+
+      function buildHanziBox() {
+        // Minimal Hanzi box per provided design: thick green border, dashed green center cross
+        const w=800, h=800, pad=32;
+        const x=pad, y=pad, box=w - pad*2, cx=w/2, cy=h/2;
+        const border = '#059669'; // emerald-600
+        const dashed = '#10b981'; // emerald-500
+        const svg = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
+            <rect width="${w}" height="${h}" fill="white"/>
+            <rect x="${x}" y="${y}" width="${box}" height="${box}" fill="none" stroke="${border}" stroke-width="8"/>
+            <path d="M${x} ${cy} H${x+box}" stroke="${dashed}" stroke-width="3" stroke-dasharray="6 6"/>
+            <path d="M${cx} ${y} V${y+box}" stroke="${dashed}" stroke-width="3" stroke-dasharray="6 6"/>
+          </svg>`;
+        return svgDataUri(svg);
+      }
+
+      function buildGraph(kind) {
+        // 800x600 to match canonical canvas; 20px grid; half-pixel for crisp lines
+        const w=800, h=600, step=20;
+        const vLines = Array.from({length: (w/step)+1 }, (_,i)=>`<path d="M${i*step+0.5} 0 H${i*step+0.5}"/>`).join('');
+        const hLines = Array.from({length: (h/step)+1 }, (_,i)=>`<path d="M0 ${i*step+0.5} V${i*step+0.5}"/>`).join('');
+        const grid = `<g stroke="#9ca3af" stroke-width="1" opacity="0.7">${Array.from({length:w/step+1},(_,i)=>`<path d=\"M${i*step+0.5} 0 V${h}\"/>`).join('')}${Array.from({length:h/step+1},(_,i)=>`<path d=\"M0 ${i*step+0.5} H${w}\"/>`).join('')}</g>`;
+        const axesCorner = `<g stroke="#60a5fa" stroke-width="2"><path d="M0 ${h-20} H${w-20}"/><path d="M20 0 V${h}"/></g>`;
+        const axesCross = `<g stroke="#60a5fa" stroke-width="2"><path d="M0 ${h/2} H${w}"/><path d="M${w/2} 0 V${h}"/></g>`;
+        const axes = kind==='corner' ? axesCorner : axesCross;
+        return svgDataUri(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="${w}" height="${h}" fill="white"/>${grid}${axes}</svg>`);
+      }
+
+      // Prepare-next flow (load first, send on demand)
+      let pendingMode = 'blank'; // blank|tpl|image
+      let pendingPayload = { kind:'clear', src:null };
+
+      function updateStagedBadge(){
+        if(!stagedBadge) return;
+        if(pendingMode==='blank'){ stagedBadge.classList.add('hidden'); return; }
+        const label = pendingPayload?.kind==='image' ? (prepImgName?.textContent || 'Image')
+          : pendingPayload?.kind?.replace('graph_','Graph ')
+            ?.replace('hanzi','Hanzi');
+        stagedBadge.textContent = label ? `Staged: ${label}` : 'Staged';
+        stagedBadge.classList.remove('hidden');
+      }
+
+      function validateSendReady(){
+        const ready = (pendingMode==='blank') || !!(pendingPayload && pendingPayload.src);
+        if(sendQuestionBtn){ sendQuestionBtn.disabled = !ready; }
+        if(sendHint){ sendHint.classList.toggle('hidden', ready); }
+      }
+
+      function setMode(m){
+        pendingMode = m;
+        [modeBlankBtn,modeTplBtn,modeImgBtn].forEach(b=>{
+          if(!b) return; b.classList.remove('is-active'); b.setAttribute('aria-pressed','false');
+        });
+        if(m==='blank'){ modeBlankBtn?.classList.add('is-active'); tplControls.classList.add('hidden'); imgControls.classList.add('hidden'); pendingPayload={kind:'clear',src:null}; templateImage=null; rerenderAllStudents(); }
+        if(m==='tpl'){ modeTplBtn?.classList.add('is-active'); tplControls.classList.remove('hidden'); imgControls.classList.add('hidden'); }
+        if(m==='image'){ modeImgBtn?.classList.add('is-active'); imgControls.classList.remove('hidden'); tplControls.classList.add('hidden'); }
+        const activeBtn = m==='blank'?modeBlankBtn : m==='tpl'?modeTplBtn : modeImgBtn;
+        activeBtn?.setAttribute('aria-pressed','true');
+        updateStagedBadge();
+        validateSendReady();
+      }
+      modeBlankBtn?.addEventListener('click', ()=> setMode('blank'));
+      modeTplBtn?.addEventListener('click', ()=> setMode('tpl'));
+      modeImgBtn?.addEventListener('click', ()=> setMode('image'));
+      setMode('blank');
+
+      // Template prep
+      function drawNextPreviewFromSrc(src, fit){
+        if(!nextPrevCtx) return;
+        nextPrevCtx.fillStyle = '#fff'; nextPrevCtx.fillRect(0,0,nextPreview.width,nextPreview.height);
+        const img = new Image();
+        img.onload = () => {
+          const s = Math.min(nextPreview.width/img.naturalWidth, nextPreview.height/img.naturalHeight) * (fit||0.96);
+          const w = img.naturalWidth*s, h = img.naturalHeight*s;
+          const dx = Math.round((nextPreview.width - w)/2), dy = Math.round((nextPreview.height - h)/2);
+          nextPrevCtx.drawImage(img, dx, dy, w, h);
+        };
+        img.onerror = () => {
+          showToast('Failed to load image. Please try another.', 'warn');
+          pendingPayload = null;
+          validateSendReady();
+        };
+        img.src = src;
+      }
+
+      prepHanzi?.addEventListener('click', ()=>{
+        templateFit=0.96; pendingPayload={kind:'hanzi', src:buildHanziBox()};
+        drawNextPreviewFromSrc(pendingPayload.src, templateFit);
+        updateStagedBadge(); validateSendReady();
+      });
+      prepGraphCorner?.addEventListener('click', ()=>{
+        templateFit=0.9; pendingPayload={kind:'graph_corner', src:buildGraph('corner')};
+        drawNextPreviewFromSrc(pendingPayload.src, templateFit);
+        updateStagedBadge(); validateSendReady();
+      });
+      prepGraphCross?.addEventListener('click', ()=>{
+        templateFit=0.9; pendingPayload={kind:'graph_cross', src:buildGraph('cross')};
+        drawNextPreviewFromSrc(pendingPayload.src, templateFit);
+        updateStagedBadge(); validateSendReady();
+      });
+
+      // Image prep
+      prepPickImg?.addEventListener('click', ()=> prepImgInput?.click());
+      prepImgInput?.addEventListener('change', (e)=>{
+        const file = e.target.files && e.target.files[0]; if(!file) return;
+        prepImgName.textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = () => {
+          templateFit = 0.96; pendingPayload = { kind:'image', src: reader.result };
+          drawNextPreviewFromSrc(pendingPayload.src, templateFit);
+          updateStagedBadge(); validateSendReady();
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // Send next: clear all, then broadcast chosen mode
+      sendQuestionBtn?.addEventListener('click', ()=>{
+        // validate selection for tpl/image modes
+        if(pendingMode==='tpl' && (!pendingPayload || !pendingPayload.src)){
+          showToast('Choose a template before sending.', 'warn'); return;
+        }
+        if(pendingMode==='image' && (!pendingPayload || !pendingPayload.src)){
+          showToast('Pick an image before sending.', 'warn'); return;
+        }
+        // cooldown 3s
+        sendQuestionBtn.disabled = true;
+        setTimeout(()=>{ validateSendReady(); }, 3000);
+        // clear everyone (broadcast to students)
+        try { channel?.send({ type:'broadcast', event:'teacher_clear_all', payload:{} }); } catch {}
+        
+        // ALSO clear locally on teacher side (we don't receive our own broadcasts)
+        templateImage = null;
+        activeAnnotationStroke = null;
+        students.forEach(st => {
+          st.strokes = [];  // Clear student drawings
+          st.annotations = [];  // Clear teacher annotations
+          st.annotationUndoStack = [];
+          st.annotationRedoStack = [];
+          if (st.flagged) {
+            st.flagged = false;
+            updateFlagUI(st);
+            if (currentStudent === st) {
+              updateModalFlagUI(st);
+            }
+          }
+          st.card?.classList.toggle('is-flagged', false);
+        });
+        if (showFlaggedOnly) {
+          showFlaggedOnly = false;
+          updateFlagFilterUI();
+        }
+        sortStudentCards();
+        activeRemoteStrokes.clear();
+        
+        // Re-render all student cards
+        try { students.forEach(st => renderStudent(st)); } catch {}
+        
+        // Clear modal overlay if open
+        try { overlayCtx.clearRect(0,0,overlay.width, overlay.height); } catch {}
+        
+        // Clear local tiny preview
+        if(nextPrevCtx){ nextPrevCtx.fillStyle='#fff'; nextPrevCtx.fillRect(0,0,nextPreview.width,nextPreview.height); }
+        
+        // Now send the new mode, and set it as LIVE for late joiners
+        if(pendingMode==='blank'){ sendTemplate('clear', null); }
+        else if(pendingPayload?.kind && pendingPayload?.src){ sendTemplate(pendingPayload.kind, pendingPayload.src); }
+        
+        const count = students.size;
+        showToast(`Sent to ${count} student${count===1?'':'s'}`, 'success');
+      });
+
+      // Sidebar template buttons removed
+    }
+
+    startSession();
+  </script>
+</body>
 </html>

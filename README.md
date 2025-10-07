@@ -1,129 +1,326 @@
-# Live Drawing Lite (Convex Edition)
+# Live Drawing Lite
 
-Live Drawing Lite is a browser-based collaborative whiteboard tailored for classrooms. This refresh replaces Supabase with [Convex](https://www.convex.dev/) so that realtime drawing, presence, and session state all run through a globally replicated, low-latency data layer.
+A real-time collaborative drawing application for classrooms, featuring teacher-student interaction with Apple Pencil optimization and professional Chinese character grid templates.
 
-The project ships as static HTML/JS that you can host anywhere (S3, GitHub Pages, Netlify, etc.). The realtime behaviour is powered entirely by the Convex deployment you connect to from the teacher and student clients.
+## 🎯 Overview
 
-## Project layout
+Live Drawing Lite is a web-based drawing platform designed for educational environments. Teachers can monitor multiple student canvases in real-time, annotate directly on student work, and send templates or images for structured practice. Students can draw freely while receiving live feedback from their teacher.
 
-```
-DEPLOY/
-├── convex/             # Convex schema + server functions
-├── js/                 # Shared browser modules
-├── server/             # Optional Express wrapper for Render/Node hosting
-├── index.html          # Landing page
-├── teacher.html        # Teacher console
-├── student.html        # Student client
-├── canvas.html         # Legacy redirect to student view
-├── features.md         # Capability overview
-└── todo.md             # Follow-up ideas
-```
+## ✨ Key Features
 
-> The original Supabase build and browser-based regression fixtures still live one level up in `../archive` and `../test`.
+### 🎨 **Real-Time Collaboration**
+- Instant synchronization between teacher and all students
+- Low-latency drawing with optimized stroke transmission
+- Automatic reconnection with visual feedback
+- Message validation and sequencing to prevent desync
 
-The teacher and student pages both load `ConvexClient` directly from the Convex CDN and talk to the functions defined in `convex/`.
+### 👨‍🏫 **Teacher Dashboard**
 
-## 1. Prerequisites
+#### Session Management
+- **Auto-generated session codes** (6-digit alphanumeric)
+- **URL parameters support** - Use `?session=CODE` to reuse the same session code
+- **QR code generation** for easy student joining
+- **Copy join URL** button with toast confirmation
+- **Refresh protection** - Confirms before leaving to prevent accidental session end
+- **Automatic student kick-out** when teacher closes/refreshes (with confirmation)
 
-- Node.js 18+ and npm
-- A Convex account (free tier works great) – [sign up](https://dashboard.convex.dev/)
+#### Canvas Monitoring
+- **Grid view** of all student canvases with live updates
+- **Adjustable cards per row** (Auto, 2, 3, 4 cards per row)
+- **Student name display** with toggle to hide/reveal names (masked as ***)
+- **Filter students** by name with real-time search
+- **Activity indicators**:
+  - 🟢 Green dot shows student is connected
+  - ✓ Green checkmark appears when teacher has annotated
+  - Pulsing border on recent activity (3-second pulse)
+  - Last seen timestamp (HH:MM:SS) updates on every stroke
 
-## 2. Create & link a Convex project
+#### Live Annotation
+- Click any student card to open **full-screen annotation modal**
+- Draw directly on student's work with pen/eraser tools
+- **Separate stroke ownership** - teacher and student strokes are independent
+- Teacher annotations appear instantly on student's canvas
+- Complete undo/redo history for annotations
+- Clear annotations without affecting student's work
 
-Inside this folder (`Live Drawing Lite/DEPLOY/`):
+#### Question Templates
+- **Prepare Next Question** panel with load-first, send-on-demand workflow
+- Three modes:
+  1. **Blank Canvas** - Clear workspace
+  2. **Templates** - Pre-built grids:
+     - Hanzi grid (red border, dashed center cross)
+     - Graph paper (corner alignment)
+     - Graph paper (cross alignment)
+  3. **Image Mode** - Upload custom images (PNG, JPG, etc.)
+- **Local preview** shows prepared content before sending
+- **"Send next question"** clears all canvases and broadcasts new template
+- Templates/images automatically sent to late joiners
+- Optimized bandwidth - images sent once, not transmitted back
 
-```bash
-npm init -y                   # only if you don't already have a package.json
-npm install convex            # local dependency for CLI + type helpers
-npx convex init               # sign in & create or link a Convex deployment
-```
+#### Drawing Tools
+- **8 color palette** (Black, Red, Blue, Green, Yellow, Orange, Purple, Pink)
+- **Pen and Eraser** tools
+- **Brush size slider** (1-12px)
+- **Stylus mode** - Toggles between pen-only or all inputs (mouse/touch/pen)
+- **Toolbar positioning** - Move toolbar left/right for comfort
+- **Complete undo/redo** with stack-based history
+- **Clear canvas** with undo support
+- **Apple Pencil optimized** - Smooth strokes with pressure sensitivity
 
-`npx convex init` writes a `convex.json` file that points at your deployment and prepares `convex/_generated/*`.
+#### Persistence
+- **Settings auto-save** to localStorage:
+  - Pen color
+  - Tool selection (pen/eraser)
+  - Brush size
+  - Stylus mode preference
+  - Toolbar position
+- Settings restored on page reload
 
-> **Note:** If you already have a Convex deployment for this project, just re-run `npx convex init` and choose “link existing project”.
+#### UI/UX
+- **Modern glass-morphism design**
+- **Sticky header** with session info always visible
+- **Toast notifications** for user feedback (glass-like, opaque)
+- **Empty state guidance** when no students connected
+- **Reconnecting bar** appears during network issues
+- **Responsive layout** optimized for tablets and desktops
 
-## 3. Copy the provided Convex functions
+### 👨‍🎓 **Student Canvas**
 
-The repo already includes the server logic you need:
+#### Session Join
+- **Username persistence** - Saved in localStorage, auto-populated on return
+- **Logout button** - Clear username and change identity
+- **URL parameter support** - Scan QR code to auto-populate session code
+- **Refresh confirmation** - Warns before reloading to prevent data loss
+- **Session end handling** - Automatically kicked when teacher ends session
 
-- `convex/schema.ts` – tables for sessions, strokes, and participants
-- `convex/sessions.ts` – create/end sessions & heartbeats
-- `convex/drawings.ts` – append strokes, list strokes, clear canvas
-- `convex/participants.ts` – presence tracking
+#### Drawing Experience
+- **Full-screen canvas** with dynamic resizing
+- **Apple Pencil optimization** for iPad users
+- **Touch-action controls** prevent accidental gestures
+- **Smooth stroke rendering** with interpolation
+- **Real-time preview** of teacher annotations
+- **Border indicators** show drawable area
 
-After running `npx convex init`, keep these files in place (they will live alongside the generated folder created by Convex). If Convex generated placeholder files, replace them with the ones in this repo.
+#### Tools & Features
+- Same drawing tools as teacher (colors, pen/eraser, brush size)
+- **Independent undo/redo** for student work only
+- **Clear canvas** removes only student's strokes, preserves teacher annotations
+- **Eraser** only affects student's own strokes
+- **Template/Image display** - Centered and scaled for consistent practice
+- **Settings persistence** same as teacher (color, tool, size, stylus mode, toolbar position)
 
-## 4. Run Convex locally
+#### Real-Time Sync
+- Strokes appear instantly on teacher's view
+- Receive teacher annotations in real-time
+- Template/image updates automatically
+- Reconnection with state recovery
+- Request snapshot on join to sync current question
 
-```bash
-npx convex dev
-```
+### 🔒 **Session Security & Reliability**
 
-This boots a local Convex backend, prints a dev deployment URL (something like `http://localhost:3210`). Leave this process running while you develop.
+#### Data Integrity
+- **Message envelopes** with version and sequence numbers
+- **Duplicate detection** prevents double-rendering
+- **Out-of-order handling** via sequence tracking
+- **Snapshot sync** for late joiners
+- **Stroke ownership** prevents unauthorized erasure
 
-## 5. Start the front-end
+#### Network Resilience
+- **Auto-reconnect** with exponential backoff
+- **Visual reconnection bar** for transparency
+- **Supabase realtime** for reliable WebSocket connections
+- **Broadcast acknowledgment** disabled for lower latency
+- **Throttled point transmission** to prevent flooding
 
-The HTML files are static, so you can open them directly in a browser or run a tiny HTTP server for nicer routing from the `DEPLOY/` directory:
+#### Performance Optimization
+- **RequestAnimationFrame** scheduling for smooth rendering
+- **IntersectionObserver** for lazy rendering of offscreen previews
+- **Canvas double-buffering** via context reuse
+- **Efficient hit-testing** for eraser using distance calculations
+- **Batched stroke points** reduce network overhead
 
-```bash
-# example: using the built-in Python HTTP server
-python3 -m http.server 5000
-```
+## 🚀 Getting Started
 
-Then visit `http://localhost:5000/teacher.html` and `student.html`.
+### Prerequisites
+- Modern web browser (Chrome, Safari, Firefox, Edge)
+- Internet connection for Supabase real-time features
+- Supabase account (free tier works)
 
-## 6. Configure the Convex URL in the UI
+### Setup
 
-Both the teacher and student pages have a **Connection** form at the top:
+1. **Clone or download** this repository
 
-1. Paste your Convex URL – use the dev URL from `npx convex dev` or the production URL (`https://your-project.convex.cloud`) after deployment.
-2. Hit “Save connection”. The value is stored in `localStorage` and reused on the same device.
-3. Teachers can now create sessions; students can join using the code displayed to them.
+2. **Configure Supabase**:
+   - Create a Supabase project at https://supabase.com
+   - Get your project URL and anon key
+   - Add to each HTML file (teacher.html, student.html):
+   ```javascript
+   window.SUPABASE_URL = 'YOUR_SUPABASE_URL';
+   window.SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+   ```
 
-You can also hardcode a default by editing `js/config.js` and replacing the placeholder value if you prefer not to use the form.
+3. **Open files**:
+   - `index.html` - Landing page with links to teacher/student portals
+   - `teacher.html` - Teacher dashboard
+   - `student.html` - Student canvas
+   - `canvas.html` - Standalone drawing tool (no collaboration)
 
-## 7. Deploy to production
+### Usage
 
-When you are ready to go live:
+#### For Teachers:
+1. Open `teacher.html` in your browser
+2. Session code auto-generates (or use URL parameter: `?session=ABC123`)
+3. Click "Start session" to go live
+4. Share QR code or join URL with students
+5. Monitor student work in real-time grid view
+6. Click any card to annotate
+7. Use "Prepare next question" to send templates/images
 
-```bash
-npx convex deploy             # deploy the Convex functions
-# note the production Convex URL printed after deploy
-```
+#### For Students:
+1. Open `student.html` (or scan teacher's QR code)
+2. Enter your name (auto-saved for next time)
+3. Enter session code (auto-populated if using QR link)
+4. Click "Join Session"
+5. Start drawing! Your work appears on teacher's screen instantly
 
-Host the static files in `DEPLOY/` (you can ignore the sibling `archive/` and `test/` folders). Update the Connection form (or `js/config.js`) to use the production Convex URL.
+## 🎨 Template System
 
-## 8. Optional Node backend (Render-ready)
+### Built-in Templates
+- **Hanzi Grid**: Single-box grid for Chinese character practice with guide lines
+- **Graph Paper (Corner)**: Grid aligned to canvas corners
+- **Graph Paper (Cross)**: Grid with center cross for symmetry practice
 
-If you want to hide the Convex URL behind server-side configuration and ship everything as a single web service, use the lightweight Express app in `server/`.
+### Custom Images
+- Upload PNG, JPG, or other image formats
+- Images fit to canvas with letterbox scaling
+- Maintains aspect ratio for consistency
+- Works offline with base64 encoding
 
-1. From `Live Drawing Lite/DEPLOY/server`, run `npm install` followed by `npm start` to boot the server locally.  
-   It serves the static site from the project root and exposes two endpoints:  
-   - `GET /api/config` returns `{ convexUrl: ... }` drawn from the `CONVEX_URL` environment variable.  
-   - `GET /api/health` for uptime probes.
-2. The clients load `js/config-bootstrap.js`, which fetches `/api/config` on page load and pre-fills the Convex URL without baking it into the bundles. Users can still override it via the Connection form.
-3. Basic rate limiting (600 req/min) plus `helmet` hardening are applied to the `/api/*` routes so routine pings don’t overload the Render instance.
-4. Deploying on [Render](https://render.com/):
-   - Create a “Web Service”, point it at the repo root, and set the build command to `cd DEPLOY/server && npm install`.
-   - Use `cd DEPLOY/server && npm start` as the start command.
-   - Add an environment variable `CONVEX_URL=https://your-project.convex.cloud` (and optionally `NODE_ENV=production`).
-   - Render will serve the static UI and proxy API calls from the same origin, keeping the Convex URL off the client bundle.
+### Template Workflow
+1. Teacher selects mode and template/image (loads locally)
+2. Preview appears in small window
+3. Teacher clicks "Send next question"
+4. All canvases clear (student + teacher strokes)
+5. Template broadcasts to all students
+6. Late joiners automatically receive current template
 
-## 9. Handling larger classrooms
+## 📱 Device Support
 
-- The teacher & student clients enqueue strokes/undo/clear operations if Convex briefly disconnects, then replay them once the connection recovers, so short outages no longer drop updates.
-- Heartbeats run every 20 seconds; if you expect hundreds of clients, you can widen `HEARTBEAT_INTERVAL` in `js/teacher.js` and `js/student.js` to ease backend load.
-- Convex enforces stroke ownership server-side (`drawings:append/undo/redo/clear`), preventing other roles from mutating your work and ensuring undo/redo only touches the author’s strokes.
-- For stress testing, simulate 50+ students with Playwright or headless browsers hitting the `/student.html` page, and monitor Convex dashboard metrics to tune rate limits if needed.
+### Optimized For:
+- **iPad with Apple Pencil** - Best experience
+- **Wacom/Drawing tablets** - Full pressure support
+- **Touch screens** - Works but pen mode recommended
+- **Desktop with mouse** - Full features available
 
-## Optional enhancements
+### Browser Compatibility:
+- ✅ Chrome/Edge (Recommended)
+- ✅ Safari (iPad/Mac)
+- ✅ Firefox
+- ⚠️ Internet Explorer (Not supported)
 
-- Gate student drawing by adding role-based permissions in `drawings:append`.
-- Persist exported canvas snapshots or attachments using Convex storage.
-- Add authentication (Convex Auth or third-party) for tighter access control.
+Confirmed working (Oct 2025):
+- Teacher annotation uses the same stable pointer model as student
+- Student strokes use Bezier smoothing (matches teacher)
+- Undo/redo/clear are ownership‑aware and reliable
+- Refresh protection on teacher with confirmation; students kicked only after confirm
 
-## Troubleshooting tips
+## 🔧 Technical Architecture
 
-- **Heartbeat stale?** Participants flip to “offline” if they stop sending heartbeats for ~45 seconds. Make sure the tab stays open or increase the interval in `js/teacher.js`/`js/student.js`.
-- **Canvas not clearing?** Ensure the Convex client is saved via the Connection form; without a URL, mutations are skipped.
-- **CORS errors?** Serve the HTML over HTTP when using a localhost Convex URL (browser security blocks file:// → http:// requests).
+### Frontend Stack
+- **Pure HTML/CSS/JavaScript** - No build process required
+- **Tailwind CSS** - Utility-first styling via CDN
+- **Canvas API** - Native 2D drawing with DPR support
+- **Pointer Events** - Unified input handling (pen/mouse/touch)
+
+### Backend/Sync
+- **Supabase Realtime** - WebSocket-based broadcasting
+- **Channel-based rooms** - Isolated sessions per code
+- **Event-driven architecture** - Broadcast events for all actions
+- **No server-side code** - Fully client-side application
+
+### Data Flow
+1. **Student draws** → Stroke points collected
+2. **Points batched** → Throttled transmission (50ms)
+3. **Broadcast to channel** → Supabase relays to all subscribers
+4. **Teacher receives** → Renders on card + modal (if open)
+5. **Teacher annotates** → Same flow in reverse with `isTeacher: true` flag
+
+### Storage
+- **localStorage** - User preferences (teacher/student settings)
+- **sessionStorage** - Temporary drawing state (student)
+- **No database** - Everything is ephemeral and real-time
+
+## 🐛 Known Limitations
+
+1. **Refresh protection requires interaction**: Modern browsers need user gesture before `beforeunload` works. An invisible overlay captures first click to enable protection.
+
+2. **No chat feature**: Communication is visual-only (drawing/annotation). Add voice/text separately if needed.
+
+3. **No recording/playback**: Strokes are not persisted after session ends. Consider recording canvas to video if needed.
+
+4. **Limited to Supabase channels**: Session capacity depends on Supabase limits (~200 concurrent connections per channel on free tier).
+
+5. **No student-to-student visibility**: Students only see their own canvas + teacher annotations. Consider adding gallery view if needed.
+
+## 📊 Performance Notes
+
+- **Recommended**: Max 30 students per session for optimal performance
+- **Stroke throttling**: Points sent in batches every 50ms to reduce network load
+- **Canvas optimization**: Uses `requestAnimationFrame` for 60fps rendering
+- **Memory management**: Old strokes persist in memory until cleared
+
+## 🎓 Use Cases
+
+### Education
+- **Chinese character practice** with structured grids
+- **Math graphing** exercises on coordinate planes
+- **Art classes** with live feedback
+- **Remote tutoring** one-on-one or small groups
+
+### Professional
+- **Whiteboard sessions** for remote teams
+- **Design reviews** with markup capability
+- **Brainstorming** with visual collaboration
+
+## 🔐 Privacy & Data
+
+- **No data storage**: All drawing data is ephemeral (lives only during session)
+- **No user accounts**: Anonymous usernames, no authentication required
+- **No analytics**: No tracking or telemetry beyond Supabase connection logs
+- **Local preferences**: Settings saved locally in browser only
+
+## 📝 Console Logging
+
+Debug logs are included for troubleshooting:
+- `[LOAD]` - Preference loading from localStorage
+- `[SAVE]` - Preference saving to localStorage
+- `[INIT]` - Initial state on page load
+- `[UI]` - UI interactions and updates
+- `[SESSION]` - Session lifecycle events
+
+Open browser DevTools (F12 or Cmd+Option+I) to view logs.
+
+## 🤝 Contributing
+
+This is a standalone educational tool. Feel free to:
+- Fork and modify for your needs
+- Add new template types
+- Improve stylus support
+- Enhance UI/UX
+
+## 📄 License
+
+This project is provided as-is for educational purposes. Modify and use freely.
+
+## 🙏 Credits
+
+- **Tailwind CSS** - Styling framework
+- **Supabase** - Real-time infrastructure
+- **QRCode.js** - QR code generation
+
+---
+
+**Built with ❤️ for teachers and students**
+
+*Last updated: October 2025*
+
